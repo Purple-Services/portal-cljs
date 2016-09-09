@@ -22,3 +22,14 @@
   [url method data f & [timeout]]
   (let [header (clj->js {"Content-Type" "application/json"})]
     (send-xhr url f method data header timeout)))
+
+(defn process-json
+  "Take a response, convert it a clj map and call f on the resulting map."
+  [f response]
+  (f (js->clj response :keywordize-keys true)))
+
+(defn process-json-response
+  "Assuming the server will respond with JSON, convert the response to JSON
+  and call f on it."
+  [f]
+  (partial xhrio-wrapper (partial process-json f)))

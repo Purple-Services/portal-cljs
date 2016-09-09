@@ -1,9 +1,11 @@
 (defproject portal-cljs "0.1.0-SNAPSHOT"
   :description "Purple Portal client. Utilizes to portal-service API"
   :url "http://dashboard.purpleapp.com"
-  :dependencies [[crate "0.2.5"]
+  :dependencies [[cljsjs/moment "2.10.6-4"]
+                 [cljsjs/pikaday "1.4.0-1"]
                  [org.clojure/clojure "1.8.0"]
                  [org.clojure/clojurescript "1.9.229"]
+                 [reagent "0.6.0-rc"]
                  [weasel "0.7.0" :exclusions [org.clojure/clojurescript]]]
   :jvm-opts ^:replace ["-Xmx1g" "-server"]
   :plugins [[lein-npm "0.6.1"]
