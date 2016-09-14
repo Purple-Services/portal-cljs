@@ -1,4 +1,4 @@
-(defproject portal-cljs "0.1.0-SNAPSHOT"
+(defproject portal-cljs "0.3.0-SNAPSHOT"
   :description "Purple Portal client. Utilizes to portal-service API"
   :url "http://dashboard.purpleapp.com"
   :dependencies [[cljsjs/moment "2.10.6-4"]
@@ -9,17 +9,20 @@
                  [weasel "0.7.0" :exclusions [org.clojure/clojurescript]]]
   :jvm-opts ^:replace ["-Xmx1g" "-server"]
   :plugins [[lein-npm "0.6.1"]
-            [lein-cljsbuild "1.1.4"]]
+            [lein-cljsbuild "1.1.4"]
+            [lein-figwheel "0.5.4-7"]]
   :npm {:dependencies [[source-map-support "0.4.0"]]}
   :source-paths ["src" "target/classes"]
-  :clean-targets ["out" "release"]
+  :clean-targets ["release"]
   :target-path "target"
   :cljsbuild
   {:builds [{:id "dev"
              :source-paths ["src"]
+             :figwheel {:on-jsload "portal-cljs.core/login"}
              :compiler {:main portal-cljs.dev
-                        :output-to "out/portal_cljs.js"
-                        :output-dir "out"
+                        :output-to "resources/public/js/portal_cljs.js"
+                        :output-dir "resources/public/js/out"
+                        :asset-path "js/out"
                         :optimizations :none
                         :source-map true
                         :verbose true}}

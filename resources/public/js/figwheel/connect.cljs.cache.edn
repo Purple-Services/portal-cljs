@@ -1,0 +1,1 @@
+{:rename-macros {}, :renames {}, :use-macros {}, :excludes #{}, :name figwheel.connect, :imports nil, :requires {portal-cljs.dev portal-cljs.dev, figwheel.client figwheel.client, figwheel.client.utils figwheel.client.utils}, :uses nil, :require-macros nil, :cljs.analyzer/constants {:seen #{:build-id :websocket-url}, :order [:build-id :websocket-url]}, :doc nil}

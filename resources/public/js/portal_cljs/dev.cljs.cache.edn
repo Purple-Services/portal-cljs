@@ -1,0 +1,1 @@
+{:rename-macros {}, :renames {}, :use-macros {}, :excludes #{}, :name portal-cljs.dev, :imports nil, :requires {repl weasel.repl, weasel.repl weasel.repl, core portal-cljs.core, portal-cljs.core portal-cljs.core}, :uses nil, :require-macros nil, :doc nil}
