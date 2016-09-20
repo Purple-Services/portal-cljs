@@ -58,7 +58,7 @@
        ;; navbar-ex1-collapse
        [:ul {:class "nav navbar-nav side-nav side-nav-color"}
         [:li {:class "hidden-lg hidden-md"}
-         [:a {:href (str base-url "logout")} "LOGOUT"]]
+         [:a {:href (str base-url "logout")} "LOG OUT"]]
         [Tab {:default? true
               :toggle-key :users-view
               :toggle (:tab-content-toggle props)

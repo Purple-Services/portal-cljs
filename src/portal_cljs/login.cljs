@@ -73,6 +73,12 @@
                              (process-json-response
                               (partial
                                process-login error-message retrieving?))))}]
+             [:a {:href (str base-url "forgot-password")
+                  :class "forgot-password"
+                  :on-click (fn [event]
+                              (.preventDefault event)
+                              (.log js/console "reset password"))}
+              "Forgot Password?"]
              (when (not (s/blank? @error-message))
                [ErrorComp {:error-message @error-message}])]]]]]]])))
 

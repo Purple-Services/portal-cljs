@@ -148,7 +148,7 @@
       :reagent-render
       (fn []
         [:input {:type "text"
-                 :class "form-control date-picker"
+                 :class "form-control-purple date-picker"
                  :placeholder "Choose Date"
                  :defaultValue (-> @exp-date
                                    (js/moment.unix)
@@ -355,7 +355,7 @@
   [props]
   (fn [{:keys [value default-value placeholder on-change]} props]
     [:input {:type "text"
-             :class "form-control"
+             :class "form-control-purple"
              :value value
              :defaultValue default-value
              :placeholder placeholder
@@ -373,7 +373,7 @@
   [props]
   (fn [{:keys [value default-value placeholder on-change]} props]
     [:input {:type "password"
-             :class "form-control"
+             :class "form-control-purple"
              :value value
              :defaultValue default-value
              :placeholder placeholder
@@ -392,7 +392,7 @@
   "
   [props]
   (fn [{:keys [value default-value placeholder on-change rows cols]} props]
-    [:textarea {:class "form-control"
+    [:textarea {:class "form-control-purple"
                 :rows rows
                 :cols cols
                 :value value
