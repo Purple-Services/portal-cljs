@@ -107,11 +107,20 @@
      (for [x (range (- 5 n))]
        ^{:key x} [:i {:class "fa fa-star-o fa-lg"}])]))
 
-(defn ErrorComp
-  "Given an error message, display it in an alert box"
+(defn MessageComp
+  "Display a messsage in a div to the user.
+
+  Props is:
+  {:message string ; the message to display
+   :type    string ; 'error' or 'success' - the kind of message
+   :dismiss-fn fn  ; a fn used to dismiss this message, optional
+  }"
   [props]
-  (fn [{:keys [error-message dismiss-fn]} props]
-    [:div {:class "alert alert-danger alert-dismissible"
+  (fn [{:keys [message type dismiss-fn]} props]
+    [:div {:class (str "alert " (condp = type
+                                  "error" "alert-danger"
+                                  "success" "alert-success"
+                                  "alert-danger") " alert-dismissible")
            :role "alert"}
      (when dismiss-fn
        [:button {:type "button"
@@ -119,8 +128,8 @@
                  :aria-label "Close"}
         [:i {:class "fa fa-times"
              :on-click dismiss-fn}]])
-     [:span {:class "sr-only"} "Error:"]
-     error-message]))
+     [:span {:class "sr-only"}]
+     message]))
 
 (defn DatePicker
   "A component for picking dates. exp-date is an r/atom
@@ -325,23 +334,6 @@
                     :color "black"}}
        "Loading   " [:i {:class "fa fa-spinner fa-pulse"
                          :style {:color "black"}}]]]]))
-
-(defn AlertSuccess
-  "An alert for when an action is successfully completed
-  props is
-  {
-  :message str ; message to display
-  :dismiss fn  ; user dismisses this dialgoue
-  }"
-  [props]
-  (fn [{:keys [message dismiss]} props]
-    [:div {:class "alert alert-success alert-dismissible"}
-     [:button {:type "button"
-               :class "close"
-               :aria-label "Close"}
-      [:i {:class "fa fa-times"
-           :on-click dismiss}]]
-     [:strong message]]))
 
 (defn TextInput
   "props is:

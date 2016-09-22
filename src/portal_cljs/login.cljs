@@ -1,19 +1,47 @@
 (ns portal-cljs.login
   (:require [clojure.string :as s]
             [portal-cljs.components :refer [FormGroup TextInput PasswordInput
-                                            FormSubmit ErrorComp]]
+                                            FormSubmit MessageComp]]
             [portal-cljs.cookies :as cookies]
             [portal-cljs.utils :refer [base-url get-input-value clj->js-string]]
             [portal-cljs.xhr :refer [retrieve-url xhrio-wrapper
                                      process-json-response]]
             [reagent.core :as r]))
 
+(def state (r/atom {:retrieving? false
+                    :error-message ""
+                    :success-message ""
+                    :display-forgot-password? true}))
+
+(def retrieving? (r/cursor state [:retrieving?]))
+(def success-message (r/cursor state [:success-message]))
+(def error-message (r/cursor state [:error-message]))
+(def display-forgot-password? (r/cursor state [:display-forgot-password?]))
+
+(defn reset-state! []
+  (reset! retrieving? true)
+  (reset! error-message "")
+  (reset! success-message ""))
+
 (defn process-login
   "Process the response used when logging in"
-  [error-message retrieving? response]
+  [response]
   (let [success (:success response)]
     (when success
       (aset js/window "location" base-url))
+    (when-not success
+      (reset! retrieving? false)
+      (reset! success-message "")
+      (reset! error-message (str "Error: " (:message response))))))
+
+(defn process-forgot-password
+  "Process the response used when forgot password is clicked"
+  [response]
+  (let [success (:success response)]
+    (when success
+      (reset! display-forgot-password? false)
+      (reset! retrieving? false)
+      (reset! success-message (:message response)))
     (when-not success
       (reset! retrieving? false)
       (reset! error-message (str "Error: " (:message response))))))
@@ -22,23 +50,17 @@
   "A form for logging into the dashboard"
   []
   (let [email (r/atom "")
-        password (r/atom "")
-        error-message    (r/atom "")
-        retrieving? (r/atom false)]
+        password (r/atom "")]
     (fn []
       [:div {:class "fluid-container"}
-       [:div {:class "row"
-              :style {:padding-top "8em"}}
+       [:div {:class "row purple-login-row"}
         [:div {:class "col-lg-4"}]
         [:div {:class "col-lg-4"}
          [:div {:class "panel panel-default"}
-          [:div {:style {:background-color "#4E4084"
-                         :padding-top "1em"}}
+          [:div {:class "purple-div-header"}
            [:img {:src (str base-url "images/logo.png")
                   :alt "PURPLE"
-                  :class "purple-login-logo"
-                  :style {:display "block"
-                          :margin "0 auto"}}]]
+                  :class "purple-login-logo"}]]
           [:div {:class "panel-body"}
            [:div {:id "login-form"}
             [:form
@@ -63,24 +85,34 @@
                           :on-click
                           (fn [event]
                             (.preventDefault event)
-                            (reset! retrieving? true)
-                            (reset! error-message "")
+                            (reset-state!)
                             (retrieve-url
                              (str base-url "login")
                              "POST"
                              (clj->js-string {:email @email
                                               :password @password})
                              (process-json-response
-                              (partial
-                               process-login error-message retrieving?))))}]
-             [:a {:href (str base-url "forgot-password")
-                  :class "forgot-password"
-                  :on-click (fn [event]
-                              (.preventDefault event)
-                              (.log js/console "reset password"))}
-              "Forgot Password?"]
-             (when (not (s/blank? @error-message))
-               [ErrorComp {:error-message @error-message}])]]]]]]])))
+                              process-login)))}]
+             (when (and @display-forgot-password?
+                        (not @retrieving?))
+               [:a {:href (str base-url "forgot-password")
+                    :class "forgot-password"
+                    :on-click (fn [event]
+                                (.preventDefault event)
+                                (reset-state!)
+                                (retrieve-url
+                                 (str base-url "forgot-password")
+                                 "POST"
+                                 (clj->js-string {:email @email})
+                                 (process-json-response
+                                  process-forgot-password)))}
+                "Forgot Password?"])
+             (when-not (s/blank? @error-message)
+               [MessageComp {:message @error-message
+                             :type "error"}])
+             (when-not (s/blank? @success-message)
+               [MessageComp {:message @success-message
+                             :type "success"}])]]]]]]])))
 
 (defn login
   "Login form"

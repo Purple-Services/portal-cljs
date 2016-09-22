@@ -1,4 +1,4 @@
-(defproject portal-cljs "0.3.0-SNAPSHOT"
+(defproject portal-cljs "0.5.5-SNAPSHOT"
   :description "Purple Portal client. Utilizes to portal-service API"
   :url "http://dashboard.purpleapp.com"
   :dependencies [[cljsjs/moment "2.10.6-4"]
@@ -18,7 +18,7 @@
   :cljsbuild
   {:builds [{:id "dev"
              :source-paths ["src"]
-             :figwheel {:on-jsload "portal-cljs.core/login"}
+             :figwheel {:on-jsload "portal-cljs.dev/on-jsload"}
              :compiler {:main portal-cljs.dev
                         :output-to "resources/public/js/portal_cljs.js"
                         :output-dir "resources/public/js/out"
