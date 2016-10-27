@@ -4,6 +4,7 @@
   :dependencies [[cljsjs/moment "2.10.6-4"]
                  [cljsjs/pikaday "1.4.0-1"]
                  [org.clojure/clojure "1.8.0"]
+                 [org.clojure/core.async "0.2.395"]
                  [org.clojure/clojurescript "1.9.229"]
                  [reagent "0.6.0-rc"]
                  [weasel "0.7.0" :exclusions [org.clojure/clojurescript]]]
