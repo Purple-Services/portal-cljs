@@ -1,5 +1,5 @@
-(defproject portal-cljs "0.5.5-SNAPSHOT"
-  :description "Purple Portal client. Utilizes to portal-service API"
+(defproject portal-cljs "0.5.6-SNAPSHOT"
+  :description "Purple Portal client. Connects to portal-service API"
   :url "http://dashboard.purpleapp.com"
   :dependencies [[cljsjs/moment "2.10.6-4"]
                  [cljsjs/pikaday "1.4.0-1"]

@@ -16,7 +16,7 @@
 
 (defn change-cookie!
   "Change the value and optionally max-age of cookie
-with name. Returns nil if no cookie was set."
+  with name. Returns nil if no cookie was set."
   [name value & [max-age]]
   (let [cookie (goog.net.Cookies. js/document)
         max-age (or max-age -1)]
@@ -29,3 +29,8 @@ with name. Returns nil if no cookie was set."
   [name]
   (let [cookie (goog.net.Cookies. js/document)]
     (.remove cookie name)))
+
+(defn get-user-id
+  "Get the user-id from cookies"
+  []
+  (get-cookie "user-id"))

@@ -23,3 +23,28 @@
   JSON to a server"
   [m]
   (js/JSON.stringify (clj->js m)))
+
+(defn select-toggle-key!
+  [toggle toggle-key]
+  "Given an atom toggle and toggle-key, select only toggle-key"
+  (swap! toggle update-values
+         (fn [el] false))
+  (swap! toggle
+         assoc toggle-key true))
+
+(defn continuous-update
+  "Call f continuously every n seconds"
+  [f n]
+  (js/setTimeout #(do (f)
+                      (continuous-update f n))
+                 n))
+
+(defn get-by-id
+  "Get an element by its id from coll."
+  [coll id]
+  (first (filter #(= (:id %) id) coll)))
+
+(defn parse-timestamp
+  "Given a mysql timestamp, convert it to unix epoch seconds"
+  [timestamp]
+  (quot (.parse js/Date timestamp) 1000))
