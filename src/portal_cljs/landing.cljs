@@ -1,7 +1,9 @@
 (ns portal-cljs.landing
   (:require [portal-cljs.components :refer [Tab TabContent]]
+            [portal-cljs.datastore :as datastore]
             [portal-cljs.state :refer [landing-state]]
             [portal-cljs.utils :refer [base-url]]
+            [portal-cljs.vehicles :refer [VehiclesPanel]]
             [reagent.core :as r]))
 
 (def tab-content-toggle (r/cursor landing-state [:tab-content-toggle]))
@@ -102,15 +104,11 @@
            [:div {:class "row"}
             [:div {:class "col-lg-12"}
              [:div
-              [:h3 "Users View placeholder"]
-              ]]]]]
+              [:h3 "Users View placeholder"]]]]]]
          ;; vehicles page
          [TabContent
           {:toggle (r/cursor tab-content-toggle [:vehicles-view])}
-          [:div {:class "row"}
-           [:div {:class "col-lg-12"}
-            [:div
-             [:h3 "Vehicles view placeholder"]]]]]
+          [VehiclesPanel @datastore/vehicles]]
          ;; past invoices
          [TabContent
           {:toggle (r/cursor tab-content-toggle [:past-invoices-view])}

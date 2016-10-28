@@ -1,1 +1,0 @@
-{"version":3,"file":"\/Users\/james\/Purple-Services\/portal-cljs\/resources\/public\/js\/portal_cljs\/state.js","sources":["state.cljs?rel=1473888611958"],"lineCount":7,"mappings":";AAAA;;;AAOA,AAAKA,kCAAc,4BAAA,2CAAA,kFAAA,mCAAA,6EAAA,zQAACC","names":["portal-cljs.state\/landing-state","reagent.core\/atom"]}

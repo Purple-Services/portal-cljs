@@ -48,3 +48,36 @@
   "Given a mysql timestamp, convert it to unix epoch seconds"
   [timestamp]
   (quot (.parse js/Date timestamp) 1000))
+
+(defn sort-fn
+  [sort-reversed? sort-keyword]
+  (if sort-reversed?
+    (partial sort-by sort-keyword)
+    (comp reverse (partial sort-by sort-keyword))))
+
+(defn filter-fn
+  "Given a map of filters and the select-filter key, return a filtering fn.
+
+  filters are of the format:
+  {<str> {:filter-fn <fn>}}
+
+  ex:
+  {\"Active\"   {:filter-fn :active}
+   \"Inactive\" {:filter-fn (comp not :active)}}
+  "
+  [filters selected-filter]
+  (fn [items]
+    (filter (:filter-fn
+             (get filters selected-filter))
+            items)))
+
+(defn paginate-items
+  "Given a list of items, partition them into page-size groups"
+  [items page-size]
+  (partition-all page-size items))
+
+(defn get-page
+  "Given a coll of paginated items, get coll n. Return empty
+  list if n does not exists"
+  [coll n]
+  (nth coll (- n 1) '()))

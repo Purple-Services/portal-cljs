@@ -22,7 +22,6 @@
      (str " " caption)]))
 
 ;; Table components
-
 (defn StaticTable
   "props contains:
   {
@@ -32,8 +31,7 @@
   data is the reagent atom to display with this table."
   [props data]
   (fn [props data]
-    (let [table-data data
-          sort-fn   (if (nil? (:sort-fn props))
+    (let [sort-fn   (if (nil? (:sort-fn props))
                       (partial sort-by :id)
                       (:sort-fn props))]
       [:table {:class "table table-bordered table-hover table-striped"}
@@ -66,6 +64,28 @@
                         (if @(:sort-reversed? props)
                           "fa-angle-down"
                           "fa-angle-up"))}])]))
+
+(defn TableHeader
+  "Props:
+  {:sort-keyword   reagent/atom ; keyword used to sort table
+   :sort-reversed? reagent/atom ; boolean}
+
+  table-map is
+  {<str> <keyword> ; keyword associated with header}
+
+  ex table-map:
+  {\"Make\"  :make
+   \"Model\" :model}"
+  [props]
+  (fn [props]
+    (let [headers-map (:headers props)]
+      [:thead
+       [:tr
+        (map (fn [k]
+               ^{:key k}
+               [TableHeadSortable (assoc props :keyword (headers-map k)) k])
+             (keys headers-map))]])))
+
 (defn RefreshButton
   "props is:
   {

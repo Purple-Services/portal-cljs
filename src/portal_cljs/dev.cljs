@@ -6,7 +6,6 @@
 
 (defn ^:export on-jsload
   []
-  ;;(core/reset-password)
   (core/init-app)
   (utils/select-toggle-key! (r/cursor state/landing-state [:tab-content-toggle])
                             :vehicles-view))

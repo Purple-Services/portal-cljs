@@ -5,8 +5,7 @@
                                  subset?]]
             [portal-cljs.cookies :refer [get-user-id]]
             [portal-cljs.utils :refer [base-url continuous-update get-by-id]]
-            [portal-cljs.xhr :refer [process-json-response
-                                     retrieve-url xhrio-wrapper]]
+            [portal-cljs.xhr :refer [process-json-response retrieve-url]]
             [reagent.core :as r]))
 
 ;; This namespace contains the global state of the app and the fn's associated
@@ -115,6 +114,21 @@
 ;; vehicles
 (def vehicles (r/atom #{}))
 
+(defn retrieve-vehicles!
+  [& {:keys [after-response]
+      :or {after-response (constantly true)}}]
+  (retrieve-url
+   (str base-url "user/" (get-user-id) "/vehicles")
+   "GET"
+   {}
+   (process-json-response
+    (fn [response]
+      (when-not (empty? response)
+        (put! modify-data-chan
+              {:topic "vehicles"
+               :data response}))
+      (after-response)))))
+
 (defn init-datastore
   "Initialize the datastore for the app. Should be called once when launching
   the app."
@@ -123,13 +137,4 @@
     ;; vehicles
     (sync-state! vehicles (sub read-data-chan "vehicles" (chan)))
     ;; initialize vehicles
-    (retrieve-url
-     (str base-url "user/" user-id "/vehicles")
-     "GET"
-     {}
-     (process-json-response
-      (fn [response]
-        (when-not (empty? response)
-          (put! modify-data-chan
-                {:topic "vehicles"
-                 :data response})))))))
+    (retrieve-vehicles!)))

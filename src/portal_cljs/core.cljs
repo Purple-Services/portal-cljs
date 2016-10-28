@@ -10,8 +10,8 @@
 
 (defn ^:export init-app
   []
-  (landing/init-landing)
-  (datastore/init-datastore))
+  (datastore/init-datastore)
+  (landing/init-landing))
 
 (defn ^:export reset-password
   []

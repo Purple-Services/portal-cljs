@@ -14,7 +14,7 @@
             [lein-figwheel "0.5.4-7"]]
   :npm {:dependencies [[source-map-support "0.4.0"]]}
   :source-paths ["src" "target/classes"]
-  :clean-targets ["release"]
+  :clean-targets ["target" "out"]
   :target-path "target"
   :cljsbuild
   {:builds [{:id "dev"
