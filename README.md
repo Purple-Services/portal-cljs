@@ -49,6 +49,12 @@ Build a single release artifact with the following script and then open `index_r
 
     ./scripts/release
 
+## Problems
+
+For some reason, lein figwheel will compile your file.cljs~ instead of your
+file.cljs files. Delete these if there is mysterious behavior that should not
+be occuring. Also, don't forget to Network -> Disable Cache in Chrome.
+
 ## License
 
 Copyright © 2016 FIXME
