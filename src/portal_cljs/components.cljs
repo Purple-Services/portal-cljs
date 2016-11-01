@@ -3,8 +3,6 @@
             [cljsjs.pikaday.with-moment]
             [portal-cljs.utils :refer [update-values]]))
 
-;; Reagent components
-
 (defn CountPanel
   "Props is of the form:
   {:value       ; str, to display
@@ -25,7 +23,7 @@
 (defn StaticTable
   "props contains:
   {
-  :table-header  ; reagenet component to render the table header with
+  :table-header  ; reagemt component to render the table header with
   :table-row     ; reagent component to render a row
   }
   data is the reagent atom to display with this table."
@@ -68,9 +66,10 @@
 (defn TableHeader
   "Props:
   {:sort-keyword   reagent/atom ; keyword used to sort table
-   :sort-reversed? reagent/atom ; boolean}
+   :sort-reversed? reagent/atom ; boolean
+   :headers        hash-map     ; see below}
 
-  table-map is
+  headers is
   {<str> <keyword> ; keyword associated with header}
 
   ex table-map:
@@ -85,6 +84,71 @@
                ^{:key k}
                [TableHeadSortable (assoc props :keyword (headers-map k)) k])
              (keys headers-map))]])))
+
+(defn TableRow
+  "props:
+  {:current-item reagent/atom ; map representing currently active item
+   :on-click     fn           ; fn of event when tr is clicked
+   :cells        hash-map     ; see below}
+
+  cells is
+  {<str> fn ; a fn of row item to be displayed in cell}
+
+  ex cells:
+  {\"Make\" :make
+   ...
+  \"Top Tier\" #(if (:only_top_tier %)
+                 \"Yes\"
+                 \"No\")}"
+  [props]
+  (fn [row-item]
+    (let [{:keys [current-item on-click cells]} props]
+      ^{:key (:id row-item)}
+      [:tr {:class (when (= (:id row-item)
+                            (:id @current-item))
+                     "active")
+            :on-click (fn [event]
+                        (on-click event row-item))}
+       (doall (map (fn [cell-fn]
+                     ^{:key (gensym "key")}
+                     [:td (cell-fn row-item)])
+                   (vals cells)))])))
+
+(defn DynamicTable
+  "props:
+  {:current-item   reagent/atom ; map of currently select item
+   :on-click       fn           ; a two argument fn of event and current-item
+   :sort-keyword   reagent/atom ; keyword items are being sorted by
+   :sort-reversed? reagent/atom ; boolean
+   :table-map      map          ; see below}
+
+  ex table-map:
+  {<str> ; table header [sort-fn    ; fn to sort header col by
+                         display-fn ; fn to display header col]}
+
+  {\"Make\" [:make :make]
+  \"Model\" [:model :model]
+  \"Top Tier\" [:only_top_tier #(if (:only_top_tier %)
+                                 \"Yes\"
+                                 \"No\")]}"
+  [props data]
+  (fn [props data]
+    (let [{:keys [current-item on-click sort-keyword sort-reversed? sort-fn
+                  table-map]
+           :or {sort-fn (partial sort-by :id)}} props
+           headers (update-values table-map first)
+           cell-fns (update-values table-map second)]
+      [:table {:class "table table-bordered table-hover table-striped"}
+       [TableHeader {:sort-keyword sort-keyword
+                     :sort-reversed? sort-reversed?
+                     :headers headers}]
+       [:tbody
+        (doall (map (fn [item]
+                      ^{:key (:id item)}
+                      ((TableRow {:current-item current-item
+                                  :on-click on-click
+                                  :cells cell-fns}) item))
+                    data))]])))
 
 (defn RefreshButton
   "props is:
@@ -107,6 +171,118 @@
        [:i {:class (str "fa fa-lg fa-refresh "
                         (when @refreshing?
                           "fa-pulse"))}]])))
+(defn TablePager
+  "props is:
+  {:total-pages  integer ; the amount of pages
+   :current-page integer ; r/atom, the current page number we are on
+   :on-click     fn      ; called whenever a pager element is clicked,optional
+  }"
+  [props]
+  (fn [{:keys [total-pages current-page on-click]} props]
+    (let [page-width 5
+          pages (->> (range 1 (+ 1 total-pages))
+                     (partition-all page-width))
+          displayed-pages (->> pages
+                               (filter (fn [i] (some #(= @current-page %) i)))
+                               first)]
+      ;; prevent overshooting of current-page for tables
+      ;; of different sizes
+      (when (> @current-page displayed-pages)
+        (reset! current-page 1))
+      (when (> total-pages 1)
+        [:nav
+         [:ul {:class "pagination"}
+          [:li {:class "page-item"}
+           [:a {:href "#"
+                :class "page-link"
+                :on-click (fn [e]
+                            (.preventDefault e)
+                            (reset! current-page 1)
+                            (when on-click (on-click)))}
+            ;; the symbol here is called a Guillemet
+            ;; html character entity reference &laquo;
+            "«"]]
+          [:li {:class "page-item"}
+           [:a {:href "#"
+                :class "page-link"
+                :on-click
+                (fn [e]
+                  (.preventDefault e)
+                  (let [new-current-page (- (first displayed-pages) 1)]
+                    (if (< new-current-page 1)
+                      (reset! current-page 1)
+                      (reset! current-page new-current-page)))
+                  (when on-click (on-click)))}
+            ;; html character entity reference &lsaquo;
+            "‹"]]
+          (doall (map (fn [page-number]
+                        ^{:key page-number}
+                        [:li {:class
+                              (str "page-item "
+                                   (when (= page-number
+                                            @current-page)
+                                     "active ")
+                                   (when (= 1)))}
+                         [:a {:href "#"
+                              :class "page-link"
+                              :on-click (fn [e]
+                                          (.preventDefault e)
+                                          (reset! current-page page-number)
+                                          (when on-click (on-click)))}
+                          page-number]])
+                      displayed-pages))
+          [:li {:class "page-item"}
+           [:a {:href "#"
+                :class "page-link"
+                :on-click (fn [e]
+                            (.preventDefault e)
+                            (let [new-current-page (+ (last displayed-pages) 1)]
+                              (if (> new-current-page total-pages)
+                                (reset! current-page total-pages)
+                                (reset! current-page new-current-page)))
+                            (when on-click (on-click)))}
+            ;; html character entity reference &rsaquo;
+            "›"]]
+          [:li {:class "page-item"}
+           [:a {:href "#"
+                :class "page-link"
+                :on-click (fn [e]
+                            (.preventDefault e)
+                            (reset! current-page total-pages)
+                            (when on-click (on-click)))}
+            ;; html character entity reference &raquo;
+            "»"]]]]))))
+
+(defn TableFilterButton
+  "Filter button for btn-group. Shows number of records that meet filter."
+  [props]
+  (fn [{:keys [text filter-fn hide-count on-click data selected-filter]}]
+    [:button {:type "button"
+              :class (str "btn btn-default "
+                          (when (= @selected-filter text) "active"))
+              :on-click (fn [e]
+                          (reset! selected-filter text)
+                          (when on-click (on-click)))}
+     text
+     (when-not hide-count
+       (str " (" (count (filter filter-fn data)) ")"))]))
+
+(defn TableFilterButtonGroup
+  "Group of filter buttons for a table."
+  [props]
+  (fn [{:keys [hide-counts on-click filters data selected-filter]}]
+    [:div {:class "btn-group" :role "group"}
+     (for [f (map #(hash-map :text (key %)
+                             :filter-fn  (:filter-fn (val %))
+                             :hide-count (contains? hide-counts (key %))
+                             :on-click on-click
+                             :data data
+                             :selected-filter selected-filter
+                             )
+                  filters)]
+       ^{:key (:text f)} [TableFilterButton f])]))
+
+;; end table components
 
 (defn KeyVal
   "Display key and val"
@@ -192,87 +368,6 @@
                                       (-> (js/moment input)
                                           (.endOf "day")
                                           (.unix))))}])})))
-(defn TablePager
-  "props is:
-  {:total-pages  integer ; the amount of pages
-   :current-page integer ; r/atom, the current page number we are on
-   :on-click     fn      ; called whenever a pager element is clicked,optional
-  }"
-  [props]
-  (fn [{:keys [total-pages current-page on-click]} props]
-    (let [page-width 5
-          pages (->> (range 1 (+ 1 total-pages))
-                     (partition-all page-width))
-          displayed-pages (->> pages
-                               (filter (fn [i] (some #(= @current-page %) i)))
-                               first)]
-      ;; prevent overshooting of current-page for tables
-      ;; of different sizes
-      (when (> @current-page displayed-pages)
-        (reset! current-page 1))
-      (when (> total-pages 1)
-        [:nav
-         [:ul {:class "pagination"}
-          [:li {:class "page-item"}
-           [:a {:href "#"
-                :class "page-link"
-                :on-click (fn [e]
-                            (.preventDefault e)
-                            (reset! current-page 1)
-                            (when on-click (on-click)))}
-            ;; the symbol here is called a Guillemet
-            ;; html character entity reference &laquo;
-            "«"]]
-          [:li {:class "page-item"}
-           [:a {:href "#"
-                :class "page-link"
-                :on-click
-                (fn [e]
-                  (.preventDefault e)
-                  (let [new-current-page (- (first displayed-pages) 1)]
-                    (if (< new-current-page 1)
-                      (reset! current-page 1)
-                      (reset! current-page new-current-page)))
-                  (when on-click (on-click)))}
-            ;; html character entity reference &lsaquo;
-            "‹"]]
-          (doall (map (fn [page-number]
-                        ^{:key page-number}
-                        [:li {:class
-                              (str "page-item "
-                                   (when (= page-number
-                                            @current-page)
-                                     "active ")
-                                   (when (= 1)))}
-                         [:a {:href "#"
-                              :class "page-link"
-                              :on-click (fn [e]
-                                          (.preventDefault e)
-                                          (reset! current-page page-number)
-                                          (when on-click (on-click)))}
-                          page-number]])
-                      displayed-pages))
-          [:li {:class "page-item"}
-           [:a {:href "#"
-                :class "page-link"
-                :on-click (fn [e]
-                            (.preventDefault e)
-                            (let [new-current-page (+ (last displayed-pages) 1)]
-                              (if (> new-current-page total-pages)
-                                (reset! current-page total-pages)
-                                (reset! current-page new-current-page)))
-                            (when on-click (on-click)))}
-            ;; html character entity reference &rsaquo;
-            "›"]]
-          [:li {:class "page-item"}
-           [:a {:href "#"
-                :class "page-link"
-                :on-click (fn [e]
-                            (.preventDefault e)
-                            (reset! current-page total-pages)
-                            (when on-click (on-click)))}
-            ;; html character entity reference &raquo;
-            "»"]]]]))))
 
 (defn ConfirmationAlert
   "An alert for confirming or cancelling an action.
@@ -307,35 +402,6 @@
           "No"]])
       (when @retrieving?
         [:i {:class "fa fa-spinner fa-pulse"}])]]))
-
-(defn TableFilterButton
-  "Filter button for btn-group. Shows number of records that meet filter."
-  [props]
-  (fn [{:keys [text filter-fn hide-count on-click data selected-filter]}]
-    [:button {:type "button"
-              :class (str "btn btn-default "
-                          (when (= @selected-filter text) "active"))
-              :on-click (fn [e]
-                          (reset! selected-filter text)
-                          (when on-click (on-click)))}
-     text
-     (when-not hide-count
-       (str " (" (count (filter filter-fn data)) ")"))]))
-
-(defn TableFilterButtonGroup
-  "Group of filter buttons for a table."
-  [props]
-  (fn [{:keys [hide-counts on-click filters data selected-filter]}]
-    [:div {:class "btn-group" :role "group"}
-     (for [f (map #(hash-map :text (key %)
-                             :filter-fn  (:filter-fn (val %))
-                             :hide-count (contains? hide-counts (key %))
-                             :on-click on-click
-                             :data data
-                             :selected-filter selected-filter
-                             )
-                  filters)]
-       ^{:key (:text f)} [TableFilterButton f])]))
 
 (defn LoadScreen
   ""

@@ -1,7 +1,7 @@
 (ns portal-cljs.vehicles
-  (:require [portal-cljs.components :refer [TableFilterButtonGroup StaticTable
-                                            TablePager TableHeadSortable
-                                            TableHeader RefreshButton]]
+  (:require [portal-cljs.components :refer [TableFilterButtonGroup
+                                            TablePager RefreshButton
+                                            DynamicTable]]
             [portal-cljs.cookies :refer [get-user-id]]
             [portal-cljs.datastore :as datastore]
             [portal-cljs.utils :as utils]
@@ -10,42 +10,6 @@
 
 (def state (r/atom {:current-vehicle nil
                     :alert-success ""}))
-
-(defn VehiclesTableHeader
-  [props]
-  (fn [props]
-    [TableHeader props {"Make" :make
-                        "Model" :model
-                        "Color" :color
-                        "Year" :year
-                        "License Plate" :license_plate
-                        "Fuel Type" :fuel_type
-                        "Top Tier" :only_top_tier}]))
-(defn VehicleRow
-  [current-vehicle]
-  (fn [vehicle]
-    [:tr {:class (when (= (:id vehicle)
-                          (:id @current-vehicle))
-                   "active")
-          :on-click (fn [_]
-                      (reset! current-vehicle vehicle)
-                      (reset! (r/cursor state [:alert-success]) ""))}
-     ;; make
-     [:td (:make vehicle)]
-     ;; model
-     [:td (:model vehicle)]
-     ;; color
-     [:td (:color vehicle)]
-     ;; year
-     [:td (:year vehicle)]
-     ;; license plate
-     [:td (:license_plate vehicle)]
-     ;; fuel type
-     [:td (:gas_type vehicle)]
-     ;; top tier
-     [:td (if (:only_top_tier vehicle)
-            "Yes"
-            "No")]]))
 
 (defn VehiclesPanel
   [vehicles]
@@ -57,14 +21,14 @@
         selected-filter (r/atom "Active")
         filters {"Active"   {:filter-fn :active}
                  "Inactive" {:filter-fn (comp not :active)}}
-        sort-vehicles (fn [vehicles]
-                        (->
-                         vehicles
-                         ((utils/filter-fn filters @selected-filter))
-                         ((utils/sort-fn @sort-reversed? @sort-keyword))))
+        processed-vehicles (fn [vehicles]
+                             (->
+                              vehicles
+                              ((utils/filter-fn filters @selected-filter))
+                              ((utils/sort-fn @sort-reversed? @sort-keyword))))
         paginated-vehicles (fn [vehicles]
                              (-> vehicles
-                                 sort-vehicles
+                                 processed-vehicles
                                  (utils/paginate-items page-size)))
         get-current-vehicles-page (fn [vehicles]
                                     (utils/get-page
@@ -100,18 +64,23 @@
        [:div {:class "row"}
         [:div {:class "col-lg-12"}
          [:div {:class "table-responsive"}
-          [StaticTable
-           {:table-header
-            [TableHeader {:sort-keyword sort-keyword
-                          :sort-reversed? sort-reversed?
-                          :headers {"Make" :make
-                                    "Model" :model
-                                    "Color" :color
-                                    "Year" :year
-                                    "License Plate" :license_plate
-                                    "Fuel Type" :fuel_type
-                                    "Top Tier" :only_top_tier}}]
-            :table-row (VehicleRow current-vehicle)}
+          [DynamicTable {:current-item current-vehicle
+                         :on-click (fn [_ vehicle]
+                                     (reset! current-vehicle vehicle)
+                                     (reset! (r/cursor state
+                                                       [:alert-success]) ""))
+                         :sort-keyword sort-keyword
+                         :sort-reversed? sort-reversed?
+                         :table-map
+                         {"Make" [:make :make]
+                          "Model" [:model :model]
+                          "Color" [:color :color]
+                          "Year" [:year :year]
+                          "License Plate" [:license_plate :license_plate]
+                          "Fuel Type" [:gas_type :gas_type]
+                          "Top Tier" [:only_top_tier #(if (:only_top_tier %)
+                                                        "Yes"
+                                                        "No")]}}
            (get-current-vehicles-page vehicles)]]]]
        [:div {:class "row"}
         [:div {:class "col-lg-12"}
