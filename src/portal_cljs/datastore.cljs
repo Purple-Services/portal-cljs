@@ -111,8 +111,9 @@
 (def modify-data-chan (chan))
 (def read-data-chan (pub modify-data-chan :topic))
 
-;; vehicles
+;; object sets
 (def vehicles (r/atom #{}))
+(def orders (r/atom #{}))
 
 (defn retrieve-vehicles!
   [& {:keys [after-response]
@@ -129,6 +130,21 @@
                :data response}))
       (after-response)))))
 
+(defn retrieve-orders!
+  [& {:keys [after-response]
+      :or {after-response (constantly true)}}]
+  (retrieve-url
+   (str base-url "user/" (get-user-id) "/orders")
+   "GET"
+   {}
+   (process-json-response
+    (fn [response]
+      (when-not (empty? response)
+        (put! modify-data-chan
+              {:topic "orders"
+               :data response}))
+      (after-response)))))
+
 (defn init-datastore
   "Initialize the datastore for the app. Should be called once when launching
   the app."
@@ -137,4 +153,7 @@
     ;; vehicles
     (sync-state! vehicles (sub read-data-chan "vehicles" (chan)))
     ;; initialize vehicles
-    (retrieve-vehicles!)))
+    (retrieve-vehicles!)
+    ;; orders
+    (sync-state! orders (sub read-data-chan "orders" (chan)))
+    (retrieve-orders!)))

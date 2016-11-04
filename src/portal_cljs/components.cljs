@@ -67,23 +67,27 @@
   "Props:
   {:sort-keyword   reagent/atom ; keyword used to sort table
    :sort-reversed? reagent/atom ; boolean
-   :headers        hash-map     ; see below}
+   :headers        vector     ; see below}
 
   headers is
-  {<str> <keyword> ; keyword associated with header}
+  [[<str> ; header-txt
+     <fn> ; sort-fn for data
+   ]
+   ...
+  ]
 
   ex table-map:
-  {\"Make\"  :make
-   \"Model\" :model}"
+  [[\"Make\"  :make]
+   [\"Model\" :model]]"
   [props]
   (fn [props]
-    (let [headers-map (:headers props)]
+    (let [headers-vec (:headers props)]
       [:thead
        [:tr
-        (map (fn [k]
-               ^{:key k}
-               [TableHeadSortable (assoc props :keyword (headers-map k)) k])
-             (keys headers-map))]])))
+        (map (fn [[header-txt sort-fn]]
+               ^{:key header-txt}
+               [TableHeadSortable (assoc props :keyword sort-fn) header-txt])
+             headers-vec)]])))
 
 (defn TableRow
   "props:
@@ -92,14 +96,16 @@
    :cells        hash-map     ; see below}
 
   cells is
-  {<str> fn ; a fn of row item to be displayed in cell}
-
-  ex cells:
-  {\"Make\" :make
+  [[<fn> ; a fn of row item to be displayed in cell
+   ]
    ...
-  \"Top Tier\" #(if (:only_top_tier %)
-                 \"Yes\"
-                 \"No\")}"
+  ]
+  ex cells:
+  [[\"Make\" :make :make]
+   ...
+   [\"Top Tier\" :top_tier #(if (:only_top_tier %)
+                               \"Yes\"
+                               \"No\")]]"
   [props]
   (fn [row-item]
     (let [{:keys [current-item on-click cells]} props]
@@ -109,10 +115,10 @@
                      "active")
             :on-click (fn [event]
                         (on-click event row-item))}
-       (doall (map (fn [cell-fn]
+       (doall (map (fn [[cell-fn]]
                      ^{:key (gensym "key")}
                      [:td (cell-fn row-item)])
-                   (vals cells)))])))
+                   cells))])))
 
 (defn DynamicTable
   "props:
@@ -120,28 +126,31 @@
    :on-click       fn           ; a two argument fn of event and current-item
    :sort-keyword   reagent/atom ; keyword items are being sorted by
    :sort-reversed? reagent/atom ; boolean
-   :table-map      map          ; see below}
+   :table-vecs     vec of vecs  ; see below}
 
-  ex table-map:
-  {<str> ; table header [sort-fn    ; fn to sort header col by
-                         display-fn ; fn to display header col]}
+  ex table-vecs:
+  [[<str> ; table header
+    <fn>  ; sort-fn for data
+    <fn>  ; a fn of row item to be displayed in cell
+   ]
+   ...
+  ]
 
-  {\"Make\" [:make :make]
-  \"Model\" [:model :model]
-  \"Top Tier\" [:only_top_tier #(if (:only_top_tier %)
+  [[\"Make\" :make :make]
+   [\"Model\" :model :model]
+   [\"Top Tier\" :only_top_tier #(if (:only_top_tier %)
                                  \"Yes\"
-                                 \"No\")]}"
+                                 \"No\")]]"
   [props data]
   (fn [props data]
     (let [{:keys [current-item on-click sort-keyword sort-reversed? sort-fn
-                  table-map]
+                  table-vecs]
            :or {sort-fn (partial sort-by :id)}} props
-           headers (update-values table-map first)
-           cell-fns (update-values table-map second)]
+           cell-fns (mapv #(vector (nth % 2)) table-vecs)]
       [:table {:class "table table-bordered table-hover table-striped"}
        [TableHeader {:sort-keyword sort-keyword
                      :sort-reversed? sort-reversed?
-                     :headers headers}]
+                     :headers table-vecs}]
        [:tbody
         (doall (map (fn [item]
                       ^{:key (:id item)}

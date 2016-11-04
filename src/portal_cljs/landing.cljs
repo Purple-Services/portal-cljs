@@ -1,5 +1,6 @@
 (ns portal-cljs.landing
   (:require [portal-cljs.components :refer [Tab TabContent]]
+            [portal-cljs.orders :refer [OrdersPanel]]
             [portal-cljs.datastore :as datastore]
             [portal-cljs.state :refer [landing-state]]
             [portal-cljs.utils :refer [base-url]]
@@ -72,10 +73,10 @@
               :on-click-tab on-click-tab}
          [:div "VEHICLES"]]
         [Tab {:default? false
-              :toggle-key :past-invoices-view
+              :toggle-key :orders-view
               :toggle (:tab-content-toggle props)
               :on-click-tab on-click-tab}
-         [:div "PAST INVOICES"]]
+         [:div "Orders"]]
         [Tab {:default? false
               :toggle-key :billing-view
               :toggle (:tab-content-toggle props)
@@ -109,13 +110,10 @@
          [TabContent
           {:toggle (r/cursor tab-content-toggle [:vehicles-view])}
           [VehiclesPanel @datastore/vehicles]]
-         ;; past invoices
+         ;; orders
          [TabContent
-          {:toggle (r/cursor tab-content-toggle [:past-invoices-view])}
-          [:div {:class "row"}
-           [:div {:class "col-lg-12"}
-            [:div
-             [:h3 "Past invoices placeholder"]]]]]
+          {:toggle (r/cursor tab-content-toggle [:orders-view])}
+          [OrdersPanel @datastore/orders]]
          ;; billing page
          [TabContent
           {:toggle (r/cursor tab-content-toggle [:billing-view])}

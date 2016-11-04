@@ -71,16 +71,16 @@
                                                        [:alert-success]) ""))
                          :sort-keyword sort-keyword
                          :sort-reversed? sort-reversed?
-                         :table-map
-                         {"Make" [:make :make]
-                          "Model" [:model :model]
-                          "Color" [:color :color]
-                          "Year" [:year :year]
-                          "License Plate" [:license_plate :license_plate]
-                          "Fuel Type" [:gas_type :gas_type]
-                          "Top Tier" [:only_top_tier #(if (:only_top_tier %)
+                         :table-vecs
+                         [["Make" :make :make]
+                          ["Model" :model :model]
+                          ["Color" :color :color]
+                          ["Year" :year :year]
+                          ["License Plate" :license_plate :license_plate]
+                          ["Fuel Type" :gas_type :gas_type]
+                          ["Top Tier" :only_top_tier #(if (:only_top_tier %)
                                                         "Yes"
-                                                        "No")]}}
+                                                        "No")]]}
            (get-current-vehicles-page vehicles)]]]]
        [:div {:class "row"}
         [:div {:class "col-lg-12"}

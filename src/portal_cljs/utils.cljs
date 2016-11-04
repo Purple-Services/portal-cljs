@@ -3,6 +3,37 @@
 (def base-url (-> (.getElementById js/document "base-url")
                   (.getAttribute "value")))
 
+(defn unix-epoch->fmt
+  "Convert a unix epoch (in seconds) to fmt"
+  [unix-epoch fmt]
+  (-> (js/moment.unix unix-epoch)
+      (.format fmt)))
+
+(defn unix-epoch->hrf
+  "Convert a unix epoch (in seconds) to a human readable format"
+  [unix-epoch]
+  (unix-epoch->fmt unix-epoch "M/D h:mm A"))
+
+(defn unix-epoch->fuller
+  "Convert a unix epoch (in seconds)"
+  [unix-epoch]
+  (unix-epoch->fmt unix-epoch "M/D/YYYY h:mm A"))
+
+(defn cents->dollars
+  "Converts an integer value of cents to dollars"
+  [cents]
+  (str (-> cents (/ 100) (.toFixed 2))))
+
+(defn dollars->cents
+  "Convert a dollar amount into cents"
+  [dollars]
+  (->  (* dollars 100) .toFixed js/parseInt))
+
+(defn cents->$dollars
+  "Converts an integer value of cents to dollar string"
+  [cents]
+  (str "$" (cents->dollars cents)))
+
 ;; widely published fn,
 ;; see:
 ;; https://dzone.com/articles/clojure-apply-function-each
