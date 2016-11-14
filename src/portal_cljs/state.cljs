@@ -6,4 +6,7 @@
 ;; needed globally.
 
 (def landing-state (r/atom {:tab-content-toggle {}
-                            :nav-bar-collapse true}))
+                            :nav-bar-collapse true
+                            :user-email ""}))
+
+

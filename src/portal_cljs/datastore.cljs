@@ -4,6 +4,7 @@
             [clojure.set :refer [difference intersection project union
                                  subset?]]
             [portal-cljs.cookies :refer [get-user-id]]
+            [portal-cljs.state :refer [landing-state]]
             [portal-cljs.utils :refer [base-url continuous-update get-by-id]]
             [portal-cljs.xhr :refer [process-json-response retrieve-url]]
             [reagent.core :as r]))
@@ -145,11 +146,24 @@
                :data response}))
       (after-response)))))
 
+(defn retrieve-email!
+  []
+  (retrieve-url
+   (str base-url "user/" (get-user-id) "/email")
+   "GET"
+   {}
+   (process-json-response
+    (fn [response]
+      (when-not (empty? response)
+        (reset! (r/cursor landing-state [:user-email]) (:email response)))))))
+
 (defn init-datastore
   "Initialize the datastore for the app. Should be called once when launching
   the app."
   []
   (let [user-id (get-user-id)]
+    ;; get the user email to display in info bar
+    (retrieve-email!)
     ;; vehicles
     (sync-state! vehicles (sub read-data-chan "vehicles" (chan)))
     ;; initialize vehicles

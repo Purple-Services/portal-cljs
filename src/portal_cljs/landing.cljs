@@ -34,12 +34,14 @@
                 :alt "PURPLE"
                 :class "purple-logo"}]]]
        [:ul {:class "nav navbar-right top-nav hidden-xs hidden-sm"}
-        ;; [:li
-        ;;  [:form {:class "navbar-form" :role "search"}
-        ;;   [search/search-bar {:tab-content-toggle
-        ;;                       tab-content-toggle}]]]
-        [:li
-         [:a {:href (str base-url "logout")} "LOG OUT"]]]])))
+        [:li {:style {:padding "15px"}}
+         [:span {:class "grey-color"}
+          @(r/cursor landing-state [:user-email])]
+         [:span {:class "orange-color"} " | "]
+         [:a {:href (str base-url "logout")
+              :style {:display "inline"
+                      :padding "0"
+                      :padding-right "15px"}} "LOG OUT"]]]])))
 
 (defn side-navbar-comp
   "Props contains:
@@ -76,12 +78,7 @@
               :toggle-key :orders-view
               :toggle (:tab-content-toggle props)
               :on-click-tab on-click-tab}
-         [:div "Orders"]]
-        [Tab {:default? false
-              :toggle-key :billing-view
-              :toggle (:tab-content-toggle props)
-              :on-click-tab on-click-tab}
-         [:div "BILLING"]]
+         [:div "ORDERS"]]
         ]])))
 
 ;; based on https://github.com/IronSummitMedia/startbootstrap-sb-admin
@@ -113,14 +110,7 @@
          ;; orders
          [TabContent
           {:toggle (r/cursor tab-content-toggle [:orders-view])}
-          [OrdersPanel @datastore/orders]]
-         ;; billing page
-         [TabContent
-          {:toggle (r/cursor tab-content-toggle [:billing-view])}
-          [:div {:class "row"}
-           [:div {:class "col-lg-12"}
-            [:div
-             [:h3 "billing placeholder"]]]]]]]])))
+          [OrdersPanel @datastore/orders]]]]])))
 
 (defn init-landing
   []
