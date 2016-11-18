@@ -34,3 +34,10 @@
   "Get the user-id from cookies"
   []
   (get-cookie "user-id"))
+
+(defn account-manager?
+  "Is this account an account-manager?"
+  []
+  (if (= (get-cookie "account-manager") "true")
+    true
+    false))

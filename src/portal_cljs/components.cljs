@@ -20,26 +20,6 @@
      (str " " caption)]))
 
 ;; Table components
-(defn StaticTable
-  "props contains:
-  {
-  :table-header  ; reagemt component to render the table header with
-  :table-row     ; reagent component to render a row
-  }
-  data is the reagent atom to display with this table."
-  [props data]
-  (fn [props data]
-    (let [sort-fn   (if (nil? (:sort-fn props))
-                      (partial sort-by :id)
-                      (:sort-fn props))]
-      [:table {:class "table table-bordered table-hover table-striped"}
-       (:table-header props)
-       [:tbody
-        (map (fn [element]
-               ^{:key (:id element)}
-               [(:table-row props) element])
-             data)]])))
-
 (defn TableHeadSortable
   "props is:
   {
@@ -401,9 +381,11 @@
       [confirmation-message]
       (when (not @retrieving?)
         [:div
-         [:button {:type "button"
+         [:button {:type "submit"
                    :class "btn btn-default"
-                   :on-click confirm-on-click}
+                   :on-click (fn [e]
+                               (.preventDefault e)
+                               (confirm-on-click e))}
           "Yes"]
          [:button {:type "button"
                    :class "btn btn-default"
@@ -440,7 +422,8 @@
   }
   "
   [props]
-  (fn [{:keys [value default-value placeholder on-change]} props]
+  (fn [{:keys [value default-value placeholder on-change]
+        :or {default-value ""}} props]
     [:input {:type "text"
              :class "form-control-purple"
              :value value

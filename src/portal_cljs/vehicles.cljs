@@ -63,25 +63,27 @@
            [RefreshButton {:refresh-fn refresh-fn}]]]]]
        [:div {:class "row"}
         [:div {:class "col-lg-12"}
-         [:div {:class "table-responsive"}
-          [DynamicTable {:current-item current-vehicle
-                         :on-click (fn [_ vehicle]
-                                     (reset! current-vehicle vehicle)
-                                     (reset! (r/cursor state
-                                                       [:alert-success]) ""))
-                         :sort-keyword sort-keyword
-                         :sort-reversed? sort-reversed?
-                         :table-vecs
-                         [["Make" :make :make]
-                          ["Model" :model :model]
-                          ["Color" :color :color]
-                          ["Year" :year :year]
-                          ["License Plate" :license_plate :license_plate]
-                          ["Fuel Type" :gas_type :gas_type]
-                          ["Top Tier" :only_top_tier #(if (:only_top_tier %)
-                                                        "Yes"
-                                                        "No")]]}
-           (get-current-vehicles-page vehicles)]]]]
+         (if (empty? vehicles)
+           [:div [:h3 "No vehicles currently associated with account"]]
+           [:div {:class "table-responsive"}
+            [DynamicTable {:current-item current-vehicle
+                           :on-click (fn [_ vehicle]
+                                       (reset! current-vehicle vehicle)
+                                       (reset! (r/cursor state
+                                                         [:alert-success]) ""))
+                           :sort-keyword sort-keyword
+                           :sort-reversed? sort-reversed?
+                           :table-vecs
+                           [["Make" :make :make]
+                            ["Model" :model :model]
+                            ["Color" :color :color]
+                            ["Year" :year :year]
+                            ["License Plate" :license_plate :license_plate]
+                            ["Fuel Type" :gas_type :gas_type]
+                            ["Top Tier" :only_top_tier #(if (:only_top_tier %)
+                                                          "Yes"
+                                                          "No")]]}
+             (get-current-vehicles-page vehicles)]])]]
        [:div {:class "row"}
         [:div {:class "col-lg-12"}
          [TablePager

@@ -65,37 +65,39 @@
            [RefreshButton {:refresh-fn refresh-fn}]]]]]
        [:div {:class "row"}
         [:div {:class "col-lg-12"}
-         [:div {:class "table-responsive"}
-          [DynamicTable {:current-item current-order
-                         :on-click (fn [_ order]
-                                     (reset! current-order order)
-                                     (reset! (r/cursor state
-                                                       [:alert-success]) ""))
-                         :sort-keyword sort-keyword
-                         :sort-reversed? sort-reversed?
-                         :table-vecs
-                         [["Status" :status :status]
-                          ["Placed" :target_time_start
-                           #(utils/unix-epoch->fuller
-                             (:target_time_start %))]
-                          ["Time" time-limit time-limit]
-                          ["Vehicle" :vehicle_description :vehicle_description]
-                          ["License Plate" :license_plate :license_plate]
-                          ["Location" :address_street :address_street]
-                          ["Tire Fill Up"
-                           :tire_pressure_check
-                           #(if (:tire_pressure_check %)
-                              "Yes"
-                              "No")]
-                          ["Gas Price" :gas_price #(utils/cents->$dollars
-                                                    (:gas_price %))]
-                          ["Gallons" :gallons :gallons]
-                          ["Service Fee" :service_fee
-                           #(utils/cents->$dollars
-                             (:service_fee %))]
-                          ["Total" :total_price #(utils/cents->$dollars
-                                                  (:total_price %))]]}
-           (get-current-orders-page orders)]]]]
+         (if (empty? orders)
+           [:div [:h3 "No orders currently associated with account"]]
+           [:div {:class "table-responsive"}
+            [DynamicTable {:current-item current-order
+                           :on-click (fn [_ order]
+                                       (reset! current-order order)
+                                       (reset! (r/cursor state
+                                                         [:alert-success]) ""))
+                           :sort-keyword sort-keyword
+                           :sort-reversed? sort-reversed?
+                           :table-vecs
+                           [["Status" :status :status]
+                            ["Placed" :target_time_start
+                             #(utils/unix-epoch->fuller
+                               (:target_time_start %))]
+                            ["Time" time-limit time-limit]
+                            ["Vehicle" :vehicle_description :vehicle_description]
+                            ["License Plate" :license_plate :license_plate]
+                            ["Location" :address_street :address_street]
+                            ["Tire Fill Up"
+                             :tire_pressure_check
+                             #(if (:tire_pressure_check %)
+                                "Yes"
+                                "No")]
+                            ["Gas Price" :gas_price #(utils/cents->$dollars
+                                                      (:gas_price %))]
+                            ["Gallons" :gallons :gallons]
+                            ["Service Fee" :service_fee
+                             #(utils/cents->$dollars
+                               (:service_fee %))]
+                            ["Total" :total_price #(utils/cents->$dollars
+                                                    (:total_price %))]]}
+             (get-current-orders-page orders)]])]]
        [:div {:class "row"}
         [:div {:class "col-lg-12"}
          [TablePager

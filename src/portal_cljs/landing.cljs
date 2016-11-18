@@ -1,8 +1,10 @@
 (ns portal-cljs.landing
   (:require [portal-cljs.components :refer [Tab TabContent]]
-            [portal-cljs.orders :refer [OrdersPanel]]
+            [portal-cljs.cookies :refer [account-manager?]]
             [portal-cljs.datastore :as datastore]
+            [portal-cljs.orders :refer [OrdersPanel]]
             [portal-cljs.state :refer [landing-state]]
+            [portal-cljs.users :refer [UsersPanel]]
             [portal-cljs.utils :refer [base-url]]
             [portal-cljs.vehicles :refer [VehiclesPanel]]
             [reagent.core :as r]))
@@ -40,7 +42,7 @@
          [:span {:class "orange-color"} " | "]
          [:a {:href (str base-url "logout")
               :style {:display "inline"
-                      :padding "0"
+                      :padding "0px"
                       :padding-right "15px"}} "LOG OUT"]]]])))
 
 (defn side-navbar-comp
@@ -64,21 +66,22 @@
        [:ul {:class "nav navbar-nav side-nav side-nav-color"}
         [:li {:class "hidden-lg hidden-md"}
          [:a {:href (str base-url "logout")} "LOG OUT"]]
-        [Tab {:default? true
-              :toggle-key :users-view
-              :toggle (:tab-content-toggle props)
-              :on-click-tab on-click-tab}
-         [:div "USERS"]]
         [Tab {:default? false
               :toggle-key :vehicles-view
               :toggle (:tab-content-toggle props)
               :on-click-tab on-click-tab}
          [:div "VEHICLES"]]
-        [Tab {:default? false
+        [Tab {:default? true
               :toggle-key :orders-view
               :toggle (:tab-content-toggle props)
               :on-click-tab on-click-tab}
          [:div "ORDERS"]]
+        (when (account-manager?)
+          [Tab {:default? false
+                :toggle-key :users-view
+                :toggle (:tab-content-toggle props)
+                :on-click-tab on-click-tab}
+           [:div "USERS"]])
         ]])))
 
 ;; based on https://github.com/IronSummitMedia/startbootstrap-sb-admin
@@ -96,13 +99,10 @@
               :class "page-wrapper-color"}
         [:div {:class "container-fluid tab-content"}
          ;; users-view
-         [TabContent
-          {:toggle (r/cursor tab-content-toggle [:users-view])}
-          [:div
-           [:div {:class "row"}
-            [:div {:class "col-lg-12"}
-             [:div
-              [:h3 "Users View placeholder"]]]]]]
+         (when (account-manager?)
+           [TabContent
+            {:toggle (r/cursor tab-content-toggle [:users-view])}
+            [UsersPanel @datastore/users]])
          ;; vehicles page
          [TabContent
           {:toggle (r/cursor tab-content-toggle [:vehicles-view])}

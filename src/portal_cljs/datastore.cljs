@@ -3,7 +3,7 @@
   (:require [cljs.core.async :refer [chan pub put! sub <! >!]]
             [clojure.set :refer [difference intersection project union
                                  subset?]]
-            [portal-cljs.cookies :refer [get-user-id]]
+            [portal-cljs.cookies :refer [get-user-id account-manager?]]
             [portal-cljs.state :refer [landing-state]]
             [portal-cljs.utils :refer [base-url continuous-update get-by-id]]
             [portal-cljs.xhr :refer [process-json-response retrieve-url]]
@@ -47,6 +47,7 @@
   [ids s1]
   (filter #(contains? ids (:id %)) s1))
 
+;; this only takes care of situations where CRU and not D can happen!
 (defn sync-sets
   "Given a set s1 and s2 of maps where each map has a unique val for its :id
   keyword, return a new set with maps from s1 updated with s2.
@@ -115,6 +116,7 @@
 ;; object sets
 (def vehicles (r/atom #{}))
 (def orders (r/atom #{}))
+(def users (r/atom #{}))
 
 (defn retrieve-vehicles!
   [& {:keys [after-response]
@@ -146,6 +148,21 @@
                :data response}))
       (after-response)))))
 
+(defn retrieve-users!
+  [& {:keys [after-response]
+      :or {after-response (constantly true)}}]
+  (retrieve-url
+   (str base-url "account-manager/" (get-user-id) "/users")
+   "GET"
+   {}
+   (process-json-response
+    (fn [response]
+      (when-not (empty? response)
+        (put! modify-data-chan
+              {:topic "users"
+               :data response}))
+      (after-response)))))
+
 (defn retrieve-email!
   []
   (retrieve-url
@@ -166,8 +183,11 @@
     (retrieve-email!)
     ;; vehicles
     (sync-state! vehicles (sub read-data-chan "vehicles" (chan)))
-    ;; initialize vehicles
     (retrieve-vehicles!)
     ;; orders
     (sync-state! orders (sub read-data-chan "orders" (chan)))
-    (retrieve-orders!)))
+    (retrieve-orders!)
+    ;; users
+    (when (account-manager?)
+      (sync-state! users (sub read-data-chan "users" (chan)))
+      (retrieve-users!))))
