@@ -163,6 +163,21 @@
                :data response}))
       (after-response)))))
 
+(defn retrieve-account-vehicles!
+  [& {:keys [after-response]
+      :or {after-response (constantly true)}}]
+  (retrieve-url
+   (str base-url "account-manager/" (get-user-id) "/vehicles")
+   "GET"
+   {}
+   (process-json-response
+    (fn [response]
+      (when-not (empty? response)
+        (put! modify-data-chan
+              {:topic "vehicles"
+               :data response}))
+      (after-response)))))
+
 (defn retrieve-email!
   []
   (retrieve-url
@@ -181,13 +196,15 @@
   (let [user-id (get-user-id)]
     ;; get the user email to display in info bar
     (retrieve-email!)
-    ;; vehicles
     (sync-state! vehicles (sub read-data-chan "vehicles" (chan)))
-    (retrieve-vehicles!)
-    ;; orders
     (sync-state! orders (sub read-data-chan "orders" (chan)))
-    (retrieve-orders!)
+    (when-not (account-manager?)
+      ;; vehicles
+      (retrieve-vehicles!)
+      ;; orders
+      (retrieve-orders!))
     ;; users
     (when (account-manager?)
       (sync-state! users (sub read-data-chan "users" (chan)))
-      (retrieve-users!))))
+      (retrieve-users!)
+      (retrieve-account-vehicles!))))

@@ -44,10 +44,14 @@
             confirm-msg (fn [new-user]
                           (let [{:keys [email full-name]} new-user]
                             [:div
-                             (str "Are you sure you want to create new user "
-                                  "with the following values?")
+                             [:p (str "Are you sure you want to create a new "
+                                      "user with the following values?")]
                              [:h4 "Email: " email]
-                             [:h4 "Full Name:" full-name]]))
+                             [:h4 "Full Name: " full-name]
+                             [:p (str "A set password email wil be sent to "
+                                      email ". Their account will be pending "
+                                      "until they have set their password."
+                                      )]]))
             submit-on-click (fn [e]
                               (.preventDefault e)
                               (if @editing?
