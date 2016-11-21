@@ -33,6 +33,7 @@
                                         :editing? false
                                         :confirming? false
                                         :retrieving? false}}))
+
 (defn AddVehicleForm
   []
   (let [add-vehicle-state (r/cursor state [:add-vehicle-state])
@@ -69,7 +70,16 @@
                              [:h4 "License Plate: " @license-plate]
                              [:h4 "Active: " (if @active?
                                                "Yes"
-                                               "No")]]))
+                                               "No")]
+                             (when (account-manager?)
+                               [:h4 "User: "
+                                (:name
+                                 (first
+                                  (filter
+                                   #(= (:id %)
+                                       @user-id)
+                                   @portal-cljs.datastore/users)))])]
+                            ))
             submit-on-click (fn [e]
                               (.preventDefault e)
                               (if @editing?
@@ -175,8 +185,8 @@
             [FormGroup {:label "Gas Type"
                         :errors (:gas_type @errors)}
              [Select {:value gas-type
-                      :options #{{:id 0 :octane "87"}
-                                 {:id 1 :octane "91"}}
+                      :options #{{:id 87 :octane "87"}
+                                 {:id 91 :octane "91"}}
                       :display-key :octane
                       :sort-keyword :id}]]]
            [:div {:class "col-lg-6 col-sm-6"}]]
@@ -212,6 +222,19 @@
                                               (.-target)
                                               (.-checked))))}]]]
            [:div {:class "col-lg-6 col-sm-6"}]]
+          ;; user select
+          (when (account-manager?)
+            [:div {:class "row"}
+             [:div {:class "col-lg-3 col-sm-3"}
+              [:p "User"]]
+             [:div {:class "col-lg-3 col-sm-3"}
+              [FormGroup {:label "User"
+                          :errors (:user_id @errors)}
+               [Select {:value user-id
+                        :options @portal-cljs.datastore/users
+                        :display-key :name
+                        :sort-keyword :name}]]]
+             [:div {:class "col-lg-6 col-sm-6"}]])
           [:div {:class "row"}
            [:div {:class "col-lg-12"}
             [SubmitDismissConfirmGroup
