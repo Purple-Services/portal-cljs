@@ -6,7 +6,7 @@
                                             SubmitDismissConfirmGroup
                                             ConfirmationAlert
                                             Select]]
-            [portal-cljs.cookies :refer [get-user-id]]
+            [portal-cljs.cookies :refer [get-user-id account-manager?]]
             [portal-cljs.datastore :as datastore]
             [portal-cljs.forms :refer [entity-save edit-on-success
                                        edit-on-error]]
@@ -63,9 +63,13 @@
                              [:h4 "Year: " @year]
                              [:h4 "Color: " @color ]
                              [:h4 "Gas Type: " @gas-type]
-                             [:h4 "Only Top Tier?: " @only-top-tier?]
+                             [:h4 "Only Top Tier: " (if @only-top-tier?
+                                                      "Yes"
+                                                      "No")]
                              [:h4 "License Plate: " @license-plate]
-                             [:h4 "Active?: " @active?]]))
+                             [:h4 "Active: " (if @active?
+                                               "Yes"
+                                               "No")]]))
             submit-on-click (fn [e]
                               (.preventDefault e)
                               (if @editing?
@@ -273,9 +277,13 @@
                                         (get-current-vehicles-page vehicles))))
         refresh-fn (fn [refreshing?]
                      (reset! refreshing? true)
-                     (datastore/retrieve-vehicles!
-                      {:after-response
-                       (reset! refreshing? false)}))]
+                     (if account-manager?
+                       (datastore/retrieve-account-vehicles!
+                        {:after-response
+                         (reset! refreshing? false)})
+                       (datastore/retrieve-vehicles!
+                        {:after-response
+                         (reset! refreshing? false)})))]
     (fn [vehicles]
       (when (nil? @current-vehicle)
         (table-pager-on-click vehicles))
@@ -319,8 +327,8 @@
                                                           "Yes"
                                                           "No")]
                             ["Active" :active #(if (:active %)
-                                                          "Yes"
-                                                          "No")]]}
+                                                 "Yes"
+                                                 "No")]]}
              (get-current-vehicles-page vehicles)]])]]
        [:div {:class "row"}
         [:div {:class "col-lg-12"}
