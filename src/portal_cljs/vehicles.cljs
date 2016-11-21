@@ -74,12 +74,8 @@
                              (when (account-manager?)
                                [:h4 "User: "
                                 (:name
-                                 (first
-                                  (filter
-                                   #(= (:id %)
-                                       @user-id)
-                                   @portal-cljs.datastore/users)))])]
-                            ))
+                                 (utils/get-by-id @portal-cljs.datastore/users
+                                                  @user-id))])]))
             submit-on-click (fn [e]
                               (.preventDefault e)
                               (if @editing?
@@ -351,7 +347,15 @@
                                                           "No")]
                             ["Active" :active #(if (:active %)
                                                  "Yes"
-                                                 "No")]]}
+                                                 "No")]
+                            (when (account-manager?)
+                              ["User"
+                               #(:name
+                                 (utils/get-by-id @portal-cljs.datastore/users
+                                                  (:user_id %)))
+                               #(:name
+                                 (utils/get-by-id @portal-cljs.datastore/users
+                                                  (:user_id %)))])]}
              (get-current-vehicles-page vehicles)]])]]
        [:div {:class "row"}
         [:div {:class "col-lg-12"}
