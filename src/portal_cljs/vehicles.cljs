@@ -135,8 +135,7 @@
              [TextInput {:value @make
                          :placeholder "Make"
                          :on-change #(reset! make
-                                             (utils/get-input-value %))}]]]
-           [:div {:class "col-lg-6 col-sm-6"}]]
+                                             (utils/get-input-value %))}]]]]
           [:div {:class "row"}
            [:div {:class "col-lg-6 col-sm-6"}
             [FormGroup {:label ""
@@ -144,8 +143,7 @@
              [TextInput {:value @model
                          :placeholder "Model"
                          :on-change #(reset! model
-                                             (utils/get-input-value %))}]]]
-           [:div {:class "col-lg-6 col-sm-6"}]]
+                                             (utils/get-input-value %))}]]]]
           [:div {:class "row"}
            [:div {:class "col-lg-6 col-sm-6"}
             [FormGroup {:label "year"
@@ -153,8 +151,7 @@
              [TextInput {:value @year
                          :placeholder "Year"
                          :on-change #(reset! year
-                                             (utils/get-input-value %))}]]]
-           [:div {:class "col-lg-6 col-sm-6"}]]
+                                             (utils/get-input-value %))}]]]]
           [:div {:class "row"}
            [:div {:class "col-lg-6 col-sm-6"}
             [FormGroup {:label ""
@@ -162,8 +159,7 @@
              [TextInput {:value @color
                          :placeholder "Color"
                          :on-change #(reset! color
-                                             (utils/get-input-value %))}]]]
-           [:div {:class "col-lg-6 col-sm-6"}]]
+                                             (utils/get-input-value %))}]]]]
           [:div {:class "row"}
            [:div {:class "col-lg-6 col-sm-6"}
             [FormGroup {:label ""
@@ -171,8 +167,19 @@
              [TextInput {:value @license-plate
                          :placeholder "License Plate"
                          :on-change #(reset! license-plate
-                                             (utils/get-input-value %))}]]]
-           [:div {:class "col-lg-6 col-sm-6"}]]
+                                             (utils/get-input-value %))}]]]]
+          ;; user select
+          (when (account-manager?)
+            [:div {:class "row"}
+             [:div {:class "col-lg-3 col-sm-3"}
+              [:p "User"]]
+             [:div {:class "col-lg-3 col-sm-3"}
+              [FormGroup {:label "User"
+                          :errors (:user_id @errors)}
+               [Select {:value user-id
+                        :options @portal-cljs.datastore/users
+                        :display-key :name
+                        :sort-keyword :name}]]]])
           ;; gas type, a select
           [:div {:class "row"}
            [:div {:class "col-lg-3 col-sm-3"}
@@ -184,8 +191,7 @@
                       :options #{{:id 87 :octane "87"}
                                  {:id 91 :octane "91"}}
                       :display-key :octane
-                      :sort-keyword :id}]]]
-           [:div {:class "col-lg-6 col-sm-6"}]]
+                      :sort-keyword :id}]]]]
           ;; only top tier, a select
           [:div {:class "row"}
            [:div {:class "col-lg-3 col-sm-3"}
@@ -200,8 +206,7 @@
                                           only-top-tier?
                                           (-> e
                                               (.-target)
-                                              (.-checked))))}]]]
-           [:div {:class "col-lg-6 col-sm-6"}]]
+                                              (.-checked))))}]]]]
           ;; active, a select
           [:div {:class "row"}
            [:div {:class "col-lg-3 col-sm-3"}
@@ -216,23 +221,9 @@
                                           active?
                                           (-> e
                                               (.-target)
-                                              (.-checked))))}]]]
-           [:div {:class "col-lg-6 col-sm-6"}]]
-          ;; user select
-          (when (account-manager?)
-            [:div {:class "row"}
-             [:div {:class "col-lg-3 col-sm-3"}
-              [:p "User"]]
-             [:div {:class "col-lg-3 col-sm-3"}
-              [FormGroup {:label "User"
-                          :errors (:user_id @errors)}
-               [Select {:value user-id
-                        :options @portal-cljs.datastore/users
-                        :display-key :name
-                        :sort-keyword :name}]]]
-             [:div {:class "col-lg-6 col-sm-6"}]])
+                                              (.-checked))))}]]]]
           [:div {:class "row"}
-           [:div {:class "col-lg-12"}
+           [:div {:class "col-lg-6 col-sm-6"}
             [SubmitDismissConfirmGroup
              {:confirming? confirming?
               :editing? editing?
