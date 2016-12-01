@@ -6,7 +6,7 @@
                                             SubmitDismissConfirmGroup
                                             ConfirmationAlert
                                             Select]]
-            [portal-cljs.cookies :refer [get-user-id account-manager?]]
+            [portal-cljs.cookies :refer [get-user-id]]
             [portal-cljs.datastore :as datastore]
             [portal-cljs.forms :refer [entity-save edit-on-success
                                        edit-on-error]]
@@ -71,7 +71,7 @@
                              [:h4 "Active: " (if @active?
                                                "Yes"
                                                "No")]
-                             (when (account-manager?)
+                             (when (datastore/account-manager?)
                                [:h4 "User: "
                                 (:name
                                  (utils/get-by-id @portal-cljs.datastore/users
@@ -169,7 +169,7 @@
                          :on-change #(reset! license-plate
                                              (utils/get-input-value %))}]]]]
           ;; user select
-          (when (account-manager?)
+          (when (datastore/account-manager?)
             [:div {:class "row"}
              [:div {:class "col-lg-3 col-sm-3"}
               [:p "User"]]
@@ -287,13 +287,10 @@
                                         (get-current-vehicles-page vehicles))))
         refresh-fn (fn [refreshing?]
                      (reset! refreshing? true)
-                     (if account-manager?
-                       (datastore/retrieve-account-vehicles!
-                        {:after-response
-                         (reset! refreshing? false)})
-                       (datastore/retrieve-vehicles!
-                        {:after-response
-                         (reset! refreshing? false)})))]
+                     (datastore/retrieve-vehicles!
+                      {:after-response
+                       (fn []
+                         (reset! refreshing? false))}))]
     (fn [vehicles]
       (when (nil? @current-vehicle)
         (table-pager-on-click vehicles))
@@ -302,14 +299,16 @@
         [:div {:class "col-lg-12"}
          [:div {:class "btn-toolbar"
                 :role "toolbar"}
-          [TableFilterButtonGroup {:on-click (fn [_]
-                                               (reset! current-page 1))
-                                   :filters filters
-                                   :data vehicles
-                                   :selected-filter selected-filter}]
-          [:div {:class "btn-group"
-                 :role "group"}
-           [RefreshButton {:refresh-fn refresh-fn}]]
+          (when-not (empty? vehicles)
+            [TableFilterButtonGroup {:on-click (fn [_]
+                                                 (reset! current-page 1))
+                                     :filters filters
+                                     :data vehicles
+                                     :selected-filter selected-filter}])
+          (when-not (empty? vehicles)
+            [:div {:class "btn-group"
+                   :role "group"}
+             [RefreshButton {:refresh-fn refresh-fn}]])
           [:div {:class "btn-group"
                  :role "group"}
            [AddVehicle state]]]]]
@@ -339,7 +338,7 @@
                             ["Active" :active #(if (:active %)
                                                  "Yes"
                                                  "No")]
-                            (when (account-manager?)
+                            (when (datastore/account-manager?)
                               ["User"
                                #(:name
                                  (utils/get-by-id @portal-cljs.datastore/users
@@ -348,9 +347,10 @@
                                  (utils/get-by-id @portal-cljs.datastore/users
                                                   (:user_id %)))])]}
              (get-current-vehicles-page vehicles)]])]]
-       [:div {:class "row"}
-        [:div {:class "col-lg-12"}
-         [TablePager
-          {:total-pages (count (paginated-vehicles vehicles))
-           :current-page current-page
-           :on-click table-pager-on-click}]]]])))
+       (when-not (empty? vehicles)
+         [:div {:class "row"}
+          [:div {:class "col-lg-12"}
+           [TablePager
+            {:total-pages (count (paginated-vehicles vehicles))
+             :current-page current-page
+             :on-click table-pager-on-click}]]])])))

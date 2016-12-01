@@ -126,11 +126,13 @@
     (let [{:keys [current-item on-click sort-keyword sort-reversed? sort-fn
                   table-vecs]
            :or {sort-fn (partial sort-by :id)}} props
-           cell-fns (mapv #(vector (nth % 2)) table-vecs)]
+           table-vecs-filtered (filterv (comp not nil?)
+                                        table-vecs)
+           cell-fns (mapv #(vector (nth % 2)) table-vecs-filtered)]
       [:table {:class "table table-bordered table-hover table-striped"}
        [TableHeader {:sort-keyword sort-keyword
                      :sort-reversed? sort-reversed?
-                     :headers table-vecs}]
+                     :headers table-vecs-filtered}]
        [:tbody
         (doall (map (fn [item]
                       ^{:key (:id item)}

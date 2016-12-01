@@ -1,6 +1,5 @@
 (ns portal-cljs.landing
   (:require [portal-cljs.components :refer [Tab TabContent]]
-            [portal-cljs.cookies :refer [account-manager?]]
             [portal-cljs.datastore :as datastore]
             [portal-cljs.orders :refer [OrdersPanel]]
             [portal-cljs.state :refer [landing-state]]
@@ -76,7 +75,7 @@
               :toggle (:tab-content-toggle props)
               :on-click-tab on-click-tab}
          [:div "ORDERS"]]
-        (when (account-manager?)
+        (when (datastore/account-manager?)
           [Tab {:default? false
                 :toggle-key :users-view
                 :toggle (:tab-content-toggle props)
@@ -99,7 +98,7 @@
               :class "page-wrapper-color"}
         [:div {:class "container-fluid tab-content"}
          ;; users-view
-         (when (account-manager?)
+         (when (datastore/account-manager?)
            [TabContent
             {:toggle (r/cursor tab-content-toggle [:users-view])}
             [UsersPanel @datastore/users]])

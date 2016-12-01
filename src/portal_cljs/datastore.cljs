@@ -3,7 +3,7 @@
   (:require [cljs.core.async :refer [chan pub put! sub <! >!]]
             [clojure.set :refer [difference intersection project union
                                  subset?]]
-            [portal-cljs.cookies :refer [get-user-id account-manager?]]
+            [portal-cljs.cookies :refer [get-user-id]]
             [portal-cljs.state :refer [landing-state]]
             [portal-cljs.utils :refer [base-url continuous-update get-by-id]]
             [portal-cljs.xhr :refer [process-json-response retrieve-url]]
@@ -117,66 +117,12 @@
 (def vehicles (r/atom #{}))
 (def orders (r/atom #{}))
 (def users (r/atom #{}))
+;; additional state
+(def account-id (r/cursor landing-state [:current-account :id]))
 
-(defn retrieve-vehicles!
-  [& {:keys [after-response]
-      :or {after-response (constantly true)}}]
-  (retrieve-url
-   (str base-url "user/" (get-user-id) "/vehicles")
-   "GET"
-   {}
-   (process-json-response
-    (fn [response]
-      (when-not (empty? response)
-        (put! modify-data-chan
-              {:topic "vehicles"
-               :data response}))
-      (after-response)))))
-
-(defn retrieve-orders!
-  [& {:keys [after-response]
-      :or {after-response (constantly true)}}]
-  (retrieve-url
-   (str base-url "user/" (get-user-id) "/orders")
-   "GET"
-   {}
-   (process-json-response
-    (fn [response]
-      (when-not (empty? response)
-        (put! modify-data-chan
-              {:topic "orders"
-               :data response}))
-      (after-response)))))
-
-(defn retrieve-users!
-  [& {:keys [after-response]
-      :or {after-response (constantly true)}}]
-  (retrieve-url
-   (str base-url "account-manager/" (get-user-id) "/users")
-   "GET"
-   {}
-   (process-json-response
-    (fn [response]
-      (when-not (empty? response)
-        (put! modify-data-chan
-              {:topic "users"
-               :data response}))
-      (after-response)))))
-
-(defn retrieve-account-vehicles!
-  [& {:keys [after-response]
-      :or {after-response (constantly true)}}]
-  (retrieve-url
-   (str base-url "account-manager/" (get-user-id) "/vehicles")
-   "GET"
-   {}
-   (process-json-response
-    (fn [response]
-      (when-not (empty? response)
-        (put! modify-data-chan
-              {:topic "vehicles"
-               :data response}))
-      (after-response)))))
+(defn account-manager?
+  []
+  (boolean (not (empty? @(r/cursor landing-state [:user-accounts])))))
 
 (defn retrieve-email!
   []
@@ -189,22 +135,85 @@
       (when-not (empty? response)
         (reset! (r/cursor landing-state [:user-email]) (:email response)))))))
 
+(defn account-manager-context-uri
+  []
+  (str base-url "account/" @account-id "/manager/" (get-user-id)))
+
+(defn retrieve-vehicles!
+  [& [{:keys [after-response]
+       :or {after-response (constantly true)}}]]
+  (retrieve-url
+   (if (account-manager?)
+     (str (account-manager-context-uri) "/vehicles")
+     (str base-url "user/" (get-user-id) "/vehicles"))
+   "GET"
+   {}
+   (process-json-response
+    (fn [response]
+      (when-not (empty? response)
+        (put! modify-data-chan
+              {:topic "vehicles"
+               :data response}))
+      (after-response)))))
+
+(defn retrieve-orders!
+  [& [{:keys [after-response]
+       :or {after-response (constantly true)}}]]
+  (retrieve-url
+   (if (account-manager?)
+     (str (account-manager-context-uri) "/orders")
+     (str base-url "user/" (get-user-id) "/orders"))
+   "GET"
+   {}
+   (process-json-response
+    (fn [response]
+      (when-not (empty? response)
+        (put! modify-data-chan
+              {:topic "orders"
+               :data response}))
+      (after-response)))))
+
+(defn retrieve-users!
+  [& [{:keys [after-response]
+       :or {after-response (constantly true)}}]]
+  (retrieve-url
+   (str (account-manager-context-uri) "/users")
+   "GET"
+   {}
+   (process-json-response
+    (fn [response]
+      (when-not (empty? response)
+        (put! modify-data-chan
+              {:topic "users"
+               :data response}))
+      (after-response)))))
+
+(defn retrieve-accounts!
+  []
+  (retrieve-url
+   (str base-url "user/" (get-user-id) "/accounts")
+   "GET"
+   {}
+   (process-json-response
+    (fn [response]
+      (when-not (empty? response)
+        (reset! (r/cursor landing-state [:user-accounts]) response)
+        ;; for now, only one account can be managed at a time
+        (reset! (r/cursor landing-state [:current-account]) (first response))
+        (retrieve-users!))
+      (retrieve-vehicles!)
+      (retrieve-orders!)))))
+
 (defn init-datastore
   "Initialize the datastore for the app. Should be called once when launching
   the app."
   []
   (let [user-id (get-user-id)]
-    ;; get the user email to display in info bar
-    (retrieve-email!)
+    ;; create the channels for syncing data
     (sync-state! vehicles (sub read-data-chan "vehicles" (chan)))
     (sync-state! orders (sub read-data-chan "orders" (chan)))
-    (when-not (account-manager?)
-      ;; vehicles
-      (retrieve-vehicles!)
-      ;; orders
-      (retrieve-orders!))
-    ;; users
-    (when (account-manager?)
-      (sync-state! users (sub read-data-chan "users" (chan)))
-      (retrieve-users!)
-      (retrieve-account-vehicles!))))
+    (sync-state! users (sub read-data-chan "users" (chan)))
+    ;; get the user email to display in info bar
+    (retrieve-email!)
+    ;; retrieve accounts, if any and retrieve the data associated with them
+    (retrieve-accounts!)))
