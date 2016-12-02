@@ -124,6 +124,10 @@
   []
   (boolean (not (empty? @(r/cursor landing-state [:user-accounts])))))
 
+(defn is-child-user?
+  []
+  (boolean @(r/cursor landing-state [:is-child-user?])))
+
 (defn retrieve-email!
   []
   (retrieve-url
@@ -134,6 +138,17 @@
     (fn [response]
       (when-not (empty? response)
         (reset! (r/cursor landing-state [:user-email]) (:email response)))))))
+
+(defn retrieve-is-child-user!
+  []
+  (retrieve-url
+   (str base-url "user/" (get-user-id) "/is-child-user")
+   "GET"
+   {}
+   (process-json-response
+    (fn [response]
+      (reset! (r/cursor landing-state [:is-child-user?])
+              (:is-child-user? response))))))
 
 (defn account-manager-context-uri
   []
@@ -215,5 +230,6 @@
     (sync-state! users (sub read-data-chan "users" (chan)))
     ;; get the user email to display in info bar
     (retrieve-email!)
+    (retrieve-is-child-user!)
     ;; retrieve accounts, if any and retrieve the data associated with them
     (retrieve-accounts!)))

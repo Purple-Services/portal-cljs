@@ -246,17 +246,18 @@
         form-target (r/cursor state [:form-target])
         new-vehicle (r/cursor add-vehicle-state [:new-vehicle])]
     (fn [state]
-      (when @editing?
-        (reset! new-vehicle default-new-vehicle)
-        (reset! form-target [AddVehicleForm])
-        default-form-target)
-      (when-not @editing?
-        (reset! form-target default-form-target)
-        [:button {:type "button"
-                  :class "btn btn-default"
-                  :on-click (fn [e]
-                              (reset! editing? true))}
-         [:i {:class "fa fa-plus"}] " Add"]))))
+      (when-not (datastore/is-child-user?)
+        (when @editing?
+          (reset! new-vehicle default-new-vehicle)
+          (reset! form-target [AddVehicleForm])
+          default-form-target)
+        (when-not @editing?
+          (reset! form-target default-form-target)
+          [:button {:type "button"
+                    :class "btn btn-default"
+                    :on-click (fn [e]
+                                (reset! editing? true))}
+           [:i {:class "fa fa-plus"}] " Add"])))))
 
 (defn VehiclesPanel
   [vehicles]
