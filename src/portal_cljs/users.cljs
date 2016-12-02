@@ -63,17 +63,15 @@
             confirm-on-click (fn [_]
                                (entity-save
                                 @new-user
-                                (str "account-manager/"
-                                     (get-user-id) "/add-user")
+                                (str (datastore/account-manager-context-uri)
+                                     "/add-user")
                                 "POST"
                                 retrieving?
                                 (edit-on-success
                                  {:entity-type "user"
                                   :entity-get-url-fn
                                   (fn [id]
-                                    (str utils/base-url
-                                         "account-manager/"
-                                         (get-user-id)
+                                    (str (datastore/account-manager-context-uri)
                                          "/user/" id))
                                   :edit-entity new-user
                                   :current-entity (r/atom {})
@@ -185,15 +183,10 @@
         ;; datastore doesn't recognize D ops, this is a hack for now
         refresh-fn (fn [refreshing?]
                      (reset! refreshing? true)
-                     (retrieve-url
-                      (str utils/base-url "account-manager/" (get-user-id) "/users")
-                      "GET"
-                      {}
-                      (process-json-response
-                       (fn [response]
-                         (when-not (empty? response)
-                           (reset! datastore/users response)))))
-                     (reset! refreshing? false))]
+                     (datastore/retrieve-users!
+                      {:after-response
+                       (fn []
+                         (reset! refreshing? false))}))]
     (fn [users]
       (when (nil? @current-user)
         (table-pager-on-click users))

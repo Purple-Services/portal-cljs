@@ -15,7 +15,7 @@
   (reset! retrieving? true)
   ;; send response to server
   (retrieve-url
-   (str base-url url)
+   url
    method
    (js/JSON.stringify
     (clj->js entity))

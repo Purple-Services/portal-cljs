@@ -87,18 +87,25 @@
             confirm-on-click (fn [_]
                                (entity-save
                                 @new-vehicle
-                                (str "user/" (get-user-id) "/add-vehicle")
+                                (if (datastore/account-manager?)
+                                  (str (datastore/account-manager-context-uri)
+                                       "/add-vehicle")
+                                  (str "user/" (get-user-id) "/add-vehicle"))
                                 "POST"
                                 retrieving?
                                 (edit-on-success
                                  {:entity-type "vehicle"
                                   :entity-get-url-fn
                                   (fn [id]
-                                    (str utils/base-url
-                                         "user/"
-                                         (get-user-id)
-                                         "/vehicle/"
-                                         id))
+                                    (if (datastore/account-manager?)
+                                      (str
+                                       (datastore/account-manager-context-uri)
+                                       "/vehicle/" id)
+                                      (str utils/base-url
+                                           "user/"
+                                           (get-user-id)
+                                           "/vehicle/"
+                                           id)))
                                   :edit-entity new-vehicle
                                   :current-entity (r/atom {})
                                   :alert-success alert-success
