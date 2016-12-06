@@ -698,15 +698,19 @@
   props is:
   {
   :toggle ; reagent atom, boolean
+  :id     ; string, optional
   }
   val in props is a reagent atom. When the val of :toggle is true, the content
   is active and thus viewable. Otherwise, when the val of :toggle is false, the
   content is not displayed."
   [props content]
   (fn [props content]
-    [:div {:class (str "tab-pane "
-                       (when @(:toggle props) "active"))}
-     content]))
+    (let [{:keys [toggle id]
+           :or {id "tab-pane"}} props]
+      [:div {:id id
+             :class (str "tab-pane "
+                         (when @toggle "active"))}
+       content])))
 
 (defn Plotly
   "Props are:

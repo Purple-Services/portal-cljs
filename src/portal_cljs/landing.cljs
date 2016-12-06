@@ -100,15 +100,18 @@
          ;; users-view
          (when (datastore/account-manager?)
            [TabContent
-            {:toggle (r/cursor tab-content-toggle [:users-view])}
+            {:toggle (r/cursor tab-content-toggle [:users-view])
+             :id "users" }
             [UsersPanel @datastore/users]])
          ;; vehicles page
          [TabContent
-          {:toggle (r/cursor tab-content-toggle [:vehicles-view])}
+          {:toggle (r/cursor tab-content-toggle [:vehicles-view])
+           :id "vehicles"}
           [VehiclesPanel @datastore/vehicles]]
          ;; orders
          [TabContent
-          {:toggle (r/cursor tab-content-toggle [:orders-view])}
+          {:toggle (r/cursor tab-content-toggle [:orders-view])
+           :id "orders"}
           [OrdersPanel @datastore/orders]]]]])))
 
 (defn init-landing

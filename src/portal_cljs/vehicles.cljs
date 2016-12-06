@@ -24,7 +24,7 @@
                           :model ""
                           :color ""
                           :gas_type "87"
-                          :only_top_tier false
+                          :only_top_tier true
                           :license_plate ""})
 
 (def state (r/atom {:current-vehicle nil
@@ -63,7 +63,7 @@
                              [:h4 "Model: " @model]
                              [:h4 "Year: " @year]
                              [:h4 "Color: " @color ]
-                             [:h4 "Gas Type: " @gas-type]
+                             [:h4 "Fuel Type: " @gas-type]
                              [:h4 "Only Top Tier: " (if @only-top-tier?
                                                       "Yes"
                                                       "No")]
@@ -190,13 +190,13 @@
           ;; gas type, a select
           [:div {:class "row"}
            [:div {:class "col-lg-3 col-sm-3"}
-            [:p "Gas Type"]]
+            [:p "Fuel Type"]]
            [:div {:class "col-lg-3 col-sm-3"}
-            [FormGroup {:label "Gas Type"
+            [FormGroup {:label "Fuel Type"
                         :errors (:gas_type @errors)}
              [Select {:value gas-type
-                      :options #{{:id 87 :octane "87"}
-                                 {:id 91 :octane "91"}}
+                      :options #{{:id 87 :octane "87 Octane"}
+                                 {:id 91 :octane "91 Octane"}}
                       :display-key :octane
                       :sort-keyword :id}]]]]
           ;; only top tier, a select
@@ -215,20 +215,20 @@
                                               (.-target)
                                               (.-checked))))}]]]]
           ;; active, a select
-          [:div {:class "row"}
-           [:div {:class "col-lg-3 col-sm-3"}
-            [:p "Active? "]]
-           [:div {:class "col-lg-3 col-sm-3"}
-            [FormGroup {:label "Active? "
-                        :errors (:active @errors)}
-             [:input {:type "checkbox"
-                      :checked @active?
-                      :style {:margin-left "4px"}
-                      :on-change (fn [e] (reset!
-                                          active?
-                                          (-> e
-                                              (.-target)
-                                              (.-checked))))}]]]]
+          ;; [:div {:class "row"}
+          ;;  [:div {:class "col-lg-3 col-sm-3"}
+          ;;   [:p "Active? "]]
+          ;;  [:div {:class "col-lg-3 col-sm-3"}
+          ;;   [FormGroup {:label "Active? "
+          ;;               :errors (:active @errors)}
+          ;;    [:input {:type "checkbox"
+          ;;             :checked @active?
+          ;;             :style {:margin-left "4px"}
+          ;;             :on-change (fn [e] (reset!
+          ;;                                 active?
+          ;;                                 (-> e
+          ;;                                     (.-target)
+          ;;                                     (.-checked))))}]]]]
           [:div {:class "row"}
            [:div {:class "col-lg-6 col-sm-6"}
             [SubmitDismissConfirmGroup
@@ -339,13 +339,15 @@
                             ["Color" :color :color]
                             ["Year" :year :year]
                             ["License Plate" :license_plate :license_plate]
-                            ["Fuel Type" :gas_type :gas_type]
+                            ["Fuel Type" :gas_type #(str (:gas_type %)
+                                                         (when
+                                                             (contains?
+                                                              #{"87" "91"}
+                                                              (:gas_type %)))
+                                                         " Octane")]
                             ["Top Tier" :only_top_tier #(if (:only_top_tier %)
                                                           "Yes"
                                                           "No")]
-                            ["Active" :active #(if (:active %)
-                                                 "Yes"
-                                                 "No")]
                             (when (datastore/account-manager?)
                               ["User"
                                #(:name
