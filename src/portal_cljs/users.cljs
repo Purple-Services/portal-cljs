@@ -223,10 +223,10 @@
                            [["Name" :name :name]
                             ["Email" :email :email]
                             ["Phone Number" :phone_number :phone_number]
-                            ["Manager" :is-manager #(if (:is-manager %)
+                            ["Manager?" :is-manager #(if (:is-manager %)
                                                       "Yes"
                                                       "No")]
-                            ["Joined" :timestamp_created
+                            ["Created" :timestamp_created
                              #(utils/unix-epoch->fmt
                                (:timestamp_created %) "M/D/YYYY")]]}
              (get-current-users-page users)]])]]

@@ -34,6 +34,99 @@
                                         :confirming? false
                                         :retrieving? false}}))
 
+(defn VehicleFormComp
+  [{:keys [vehicle errors]}]
+  (fn [{:keys [vehicle errors]}]
+    (let [user-id (r/cursor vehicle [:user_id])
+          active? (r/cursor vehicle [:active])
+          year (r/cursor vehicle [:year])
+          make (r/cursor vehicle [:make])
+          model (r/cursor vehicle [:model])
+          color (r/cursor vehicle [:color])
+          gas-type (r/cursor vehicle [:gas_type])
+          only-top-tier? (r/cursor vehicle [:only_top_tier])
+          license-plate (r/cursor vehicle [:license_plate])]
+      [:div
+       [:div {:class "row"}
+        [:div {:class "col-lg-6 col-sm-6"}
+         [FormGroup {:label "make"
+                     :errors (:make @errors)}
+          [TextInput {:value @make
+                      :placeholder "Make"
+                      :on-change #(reset! make
+                                          (utils/get-input-value %))}]]]]
+       [:div {:class "row"}
+        [:div {:class "col-lg-6 col-sm-6"}
+         [FormGroup {:label ""
+                     :errors (:model @errors)}
+          [TextInput {:value @model
+                      :placeholder "Model"
+                      :on-change #(reset! model
+                                          (utils/get-input-value %))}]]]]
+       [:div {:class "row"}
+        [:div {:class "col-lg-6 col-sm-6"}
+         [FormGroup {:label "year"
+                     :errors (:year @errors)}
+          [TextInput {:value @year
+                      :placeholder "Year"
+                      :on-change #(reset! year
+                                          (utils/get-input-value %))}]]]]
+       [:div {:class "row"}
+        [:div {:class "col-lg-6 col-sm-6"}
+         [FormGroup {:label ""
+                     :errors (:color @errors)}
+          [TextInput {:value @color
+                      :placeholder "Color"
+                      :on-change #(reset! color
+                                          (utils/get-input-value %))}]]]]
+       [:div {:class "row"}
+        [:div {:class "col-lg-6 col-sm-6"}
+         [FormGroup {:label ""
+                     :errors (:license_plate @errors)}
+          [TextInput {:value @license-plate
+                      :placeholder "License Plate"
+                      :on-change #(reset! license-plate
+                                          (utils/get-input-value %))}]]]]
+       ;; user select
+       (when (datastore/account-manager?)
+         [:div {:class "row"}
+          [:div {:class "col-lg-3 col-sm-3"}
+           [:p "User"]]
+          [:div {:class "col-lg-3 col-sm-3"}
+           [FormGroup {:label "User"
+                       :errors (:user_id @errors)}
+            [Select {:value user-id
+                     :options @portal-cljs.datastore/users
+                     :display-key :name
+                     :sort-keyword :name}]]]])
+       ;; gas type, a select
+       [:div {:class "row"}
+        [:div {:class "col-lg-3 col-sm-3"}
+         [:p "Fuel Type"]]
+        [:div {:class "col-lg-3 col-sm-3"}
+         [FormGroup {:label "Fuel Type"
+                     :errors (:gas_type @errors)}
+          [Select {:value gas-type
+                   :options #{{:id 87 :octane "87 Octane"}
+                              {:id 91 :octane "91 Octane"}}
+                   :display-key :octane
+                   :sort-keyword :id}]]]]
+       ;; only top tier, a select
+       [:div {:class "row"}
+        [:div {:class "col-lg-3 col-sm-3"}
+         [:p "Only Top Tier Gas?"]]
+        [:div {:class "col-lg-3 col-sm-3"}
+         [FormGroup {:label "Only Top Tier Gas?"
+                     :errors (:only_top_tier @errors)}
+          [:input {:type "checkbox"
+                   :checked @only-top-tier?
+                   :style {:margin-left "4px"}
+                   :on-change (fn [e] (reset!
+                                       only-top-tier?
+                                       (-> e
+                                           (.-target)
+                                           (.-checked))))}]]]]])))
+
 (defn AddVehicleForm
   []
   (let [add-vehicle-state (r/cursor state [:add-vehicle-state])
@@ -55,27 +148,31 @@
     (fn []
       (let [;; helper fns
             confirm-msg (fn [new-vehicle]
-                          (let [{:keys [email full-name]} new-vehicle]
+                          (let [{:keys [email full-name make model year
+                                        color gas_type only-top-tier?
+                                        license_plate active? user_id]}
+                                new-vehicle]
+                            (.log js/console "new-vehicle " (clj->js new-vehicle))
                             [:div
                              [:p (str "Are you sure you want to create a new "
                                       "vehicle with the following values?")]
-                             [:h4 "Make: " @make]
-                             [:h4 "Model: " @model]
-                             [:h4 "Year: " @year]
-                             [:h4 "Color: " @color ]
-                             [:h4 "Fuel Type: " @gas-type]
-                             [:h4 "Only Top Tier: " (if @only-top-tier?
+                             [:h4 "Make: " make]
+                             [:h4 "Model: " model]
+                             [:h4 "Year: " year]
+                             [:h4 "Color: " color]
+                             [:h4 "Fuel Type: " gas-type]
+                             [:h4 "Only Top Tier: " (if only-top-tier?
                                                       "Yes"
                                                       "No")]
-                             [:h4 "License Plate: " @license-plate]
-                             [:h4 "Active: " (if @active?
-                                               "Yes"
-                                               "No")]
+                             [:h4 "License Plate: " license-plate]
+                             ;; [:h4 "Active: " (if active?
+                             ;;                   "Yes"
+                             ;;                   "No")]
                              (when (datastore/account-manager?)
                                [:h4 "User: "
                                 (:name
                                  (utils/get-by-id @portal-cljs.datastore/users
-                                                  @user-id))])]))
+                                                  user_id))])]))
             submit-on-click (fn [e]
                               (.preventDefault e)
                               (if @editing?
@@ -135,100 +232,8 @@
         [:div {:class "form-border"
                :style {:margin-top "15px"}}
          [:form {:class "form-horizontal"}
-          [:div {:class "row"}
-           [:div {:class "col-lg-6 col-sm-6"}
-            [FormGroup {:label "make"
-                        :errors (:make @errors)}
-             [TextInput {:value @make
-                         :placeholder "Make"
-                         :on-change #(reset! make
-                                             (utils/get-input-value %))}]]]]
-          [:div {:class "row"}
-           [:div {:class "col-lg-6 col-sm-6"}
-            [FormGroup {:label ""
-                        :errors (:model @errors)}
-             [TextInput {:value @model
-                         :placeholder "Model"
-                         :on-change #(reset! model
-                                             (utils/get-input-value %))}]]]]
-          [:div {:class "row"}
-           [:div {:class "col-lg-6 col-sm-6"}
-            [FormGroup {:label "year"
-                        :errors (:year @errors)}
-             [TextInput {:value @year
-                         :placeholder "Year"
-                         :on-change #(reset! year
-                                             (utils/get-input-value %))}]]]]
-          [:div {:class "row"}
-           [:div {:class "col-lg-6 col-sm-6"}
-            [FormGroup {:label ""
-                        :errors (:color @errors)}
-             [TextInput {:value @color
-                         :placeholder "Color"
-                         :on-change #(reset! color
-                                             (utils/get-input-value %))}]]]]
-          [:div {:class "row"}
-           [:div {:class "col-lg-6 col-sm-6"}
-            [FormGroup {:label ""
-                        :errors (:color @license-plate)}
-             [TextInput {:value @license-plate
-                         :placeholder "License Plate"
-                         :on-change #(reset! license-plate
-                                             (utils/get-input-value %))}]]]]
-          ;; user select
-          (when (datastore/account-manager?)
-            [:div {:class "row"}
-             [:div {:class "col-lg-3 col-sm-3"}
-              [:p "User"]]
-             [:div {:class "col-lg-3 col-sm-3"}
-              [FormGroup {:label "User"
-                          :errors (:user_id @errors)}
-               [Select {:value user-id
-                        :options @portal-cljs.datastore/users
-                        :display-key :name
-                        :sort-keyword :name}]]]])
-          ;; gas type, a select
-          [:div {:class "row"}
-           [:div {:class "col-lg-3 col-sm-3"}
-            [:p "Fuel Type"]]
-           [:div {:class "col-lg-3 col-sm-3"}
-            [FormGroup {:label "Fuel Type"
-                        :errors (:gas_type @errors)}
-             [Select {:value gas-type
-                      :options #{{:id 87 :octane "87 Octane"}
-                                 {:id 91 :octane "91 Octane"}}
-                      :display-key :octane
-                      :sort-keyword :id}]]]]
-          ;; only top tier, a select
-          [:div {:class "row"}
-           [:div {:class "col-lg-3 col-sm-3"}
-            [:p "Only Top Tier Gas?"]]
-           [:div {:class "col-lg-3 col-sm-3"}
-            [FormGroup {:label "Only Top Tier Gas?"
-                        :errors (:only_top_tier @errors)}
-             [:input {:type "checkbox"
-                      :checked @only-top-tier?
-                      :style {:margin-left "4px"}
-                      :on-change (fn [e] (reset!
-                                          only-top-tier?
-                                          (-> e
-                                              (.-target)
-                                              (.-checked))))}]]]]
-          ;; active, a select
-          ;; [:div {:class "row"}
-          ;;  [:div {:class "col-lg-3 col-sm-3"}
-          ;;   [:p "Active? "]]
-          ;;  [:div {:class "col-lg-3 col-sm-3"}
-          ;;   [FormGroup {:label "Active? "
-          ;;               :errors (:active @errors)}
-          ;;    [:input {:type "checkbox"
-          ;;             :checked @active?
-          ;;             :style {:margin-left "4px"}
-          ;;             :on-change (fn [e] (reset!
-          ;;                                 active?
-          ;;                                 (-> e
-          ;;                                     (.-target)
-          ;;                                     (.-checked))))}]]]]
+          [VehicleFormComp {:vehicle new-vehicle
+                            :errors errors}]
           [:div {:class "row"}
            [:div {:class "col-lg-6 col-sm-6"}
             [SubmitDismissConfirmGroup
@@ -243,8 +248,7 @@
                {:confirmation-message (fn [] (confirm-msg @new-vehicle))
                 :cancel-on-click dismiss-fn
                 :confirm-on-click confirm-on-click
-                :retrieving? retrieving?
-                }])]]]]))))
+                :retrieving? retrieving?}])]]]]))))
 
 (defn AddVehicle
   [state]
@@ -345,9 +349,9 @@
                                                               #{"87" "91"}
                                                               (:gas_type %)))
                                                          " Octane")]
-                            ["Top Tier" :only_top_tier #(if (:only_top_tier %)
-                                                          "Yes"
-                                                          "No")]
+                            ["Top Tier?" :only_top_tier #(if (:only_top_tier %)
+                                                           "Yes"
+                                                           "No")]
                             (when (datastore/account-manager?)
                               ["User"
                                #(:name
@@ -355,7 +359,17 @@
                                                   (:user_id %)))
                                #(:name
                                  (utils/get-by-id @portal-cljs.datastore/users
-                                                  (:user_id %)))])]}
+                                                  (:user_id %)))])
+                            (when (or (datastore/account-manager?)
+                                      (datastore/is-child-user?))
+                              [""
+                               (constantly true)
+                               (fn [vehicle]
+                                 [:a {:on-click
+                                      (fn [_]
+                                        (.log js/console (:id vehicle)))}
+                                  [:i {:class (str "fa fa-pencil-square-o fa-2 "
+                                                   "fake-link")}]])])]}
              (get-current-vehicles-page vehicles)]])]]
        (when-not (empty? vehicles)
          [:div {:class "row"}

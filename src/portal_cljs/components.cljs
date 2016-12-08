@@ -31,10 +31,11 @@
   [props text]
   (fn [props text]
     [:th
-     {:class "fake-link"
-      :on-click #(do
-                   (reset! (:sort-keyword props) (:keyword props))
-                   (swap! (:sort-reversed? props) not))}
+     {:class (when-not (empty? text) "fake-link")
+      :on-click (fn [_]
+                  (when (not (empty? text))
+                    (reset! (:sort-keyword props) (:keyword props))
+                    (swap! (:sort-reversed? props) not)))}
      text
      (when (= @(:sort-keyword props)
               (:keyword props))

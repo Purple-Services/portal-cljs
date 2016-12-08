@@ -84,7 +84,7 @@
                             ["Vehicle" :vehicle_description :vehicle_description]
                             ["License Plate" :license_plate :license_plate]
                             ["Location" :address_street :address_street]
-                            ["Tire Fill Up"
+                            ["Tire Fill Up?"
                              :tire_pressure_check
                              #(if (:tire_pressure_check %)
                                 "Yes"
