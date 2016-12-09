@@ -76,13 +76,15 @@
                            :sort-keyword sort-keyword
                            :sort-reversed? sort-reversed?
                            :table-vecs
-                           [["Status" :status :status]
+                           [["Status" :status #(if (= (:status %) "unassigned")
+                                                 "accepted"
+                                                 (:status %))]
                             ["Placed" :target_time_start
                              #(utils/unix-epoch->fuller
                                (:target_time_start %))]
                             ["Time" time-limit time-limit]
                             ["Vehicle" :vehicle_description :vehicle_description]
-                            ["License Plate" :license_plate :license_plate]
+                            ["Plate" :license_plate :license_plate]
                             ["Location" :address_street :address_street]
                             ["Tire Fill Up?"
                              :tire_pressure_check

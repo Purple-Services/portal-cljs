@@ -57,15 +57,14 @@
           license-plate (r/cursor vehicle [:license_plate])]
       [:div
        [:div {:class "row"}
-        [:div {:class "col-lg-6 col-sm-6"}
+        [:div {:class "col-lg-6 col-sm-12"}
          [FormGroup {:label "make"
                      :errors (:make @errors)}
           [TextInput {:value @make
                       :placeholder "Make"
                       :on-change #(reset! make
-                                          (utils/get-input-value %))}]]]]
-       [:div {:class "row"}
-        [:div {:class "col-lg-6 col-sm-6"}
+                                          (utils/get-input-value %))}]]]
+        [:div {:class "col-lg-6 col-sm-12"}
          [FormGroup {:label ""
                      :errors (:model @errors)}
           [TextInput {:value @model
@@ -73,23 +72,21 @@
                       :on-change #(reset! model
                                           (utils/get-input-value %))}]]]]
        [:div {:class "row"}
-        [:div {:class "col-lg-6 col-sm-6"}
+        [:div {:class "col-lg-6 col-sm-12"}
          [FormGroup {:label "year"
                      :errors (:year @errors)}
           [TextInput {:value @year
                       :placeholder "Year"
                       :on-change #(reset! year
-                                          (utils/get-input-value %))}]]]]
-       [:div {:class "row"}
-        [:div {:class "col-lg-6 col-sm-6"}
+                                          (utils/get-input-value %))}]]]
+        [:div {:class "col-lg-3 col-sm-12"}
          [FormGroup {:label "color"
                      :errors (:color @errors)}
           [TextInput {:value @color
                       :placeholder "Color"
                       :on-change #(reset! color
-                                          (utils/get-input-value %))}]]]]
-       [:div {:class "row"}
-        [:div {:class "col-lg-6 col-sm-6"}
+                                          (utils/get-input-value %))}]]]
+        [:div {:class "col-lg-3 col-sm-12"}
          [FormGroup {:label ""
                      :errors (:license_plate @errors)}
           [TextInput {:value @license-plate
@@ -494,9 +491,10 @@
                                                               #{"87" "91"}
                                                               (:gas_type %)))
                                                          " Octane")]
-                            ["Top Tier?" :only_top_tier #(if (:only_top_tier %)
-                                                           "Yes"
-                                                           "No")]
+                            ["Top Tier Only?" :only_top_tier
+                             #(if (:only_top_tier %)
+                                "Yes"
+                                "No")]
                             (when (datastore/account-manager?)
                               ["User"
                                #(:name
