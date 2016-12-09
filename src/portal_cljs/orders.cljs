@@ -2,7 +2,7 @@
   (:require [cljsjs.moment]
             [portal-cljs.components :refer [TableFilterButtonGroup
                                             TablePager RefreshButton
-                                            DynamicTable]]
+                                            DynamicTable GoogleMapLink]]
             [portal-cljs.cookies :refer [get-user-id]]
             [portal-cljs.datastore :as datastore]
             [portal-cljs.utils :as utils]
@@ -85,7 +85,12 @@
                             ["Time" time-limit time-limit]
                             ["Vehicle" :vehicle_description :vehicle_description]
                             ["Plate" :license_plate :license_plate]
-                            ["Location" :address_street :address_street]
+                            ["Location" :address_street
+                             (fn [order]
+                               [GoogleMapLink
+                                (:address_street order)
+                                (:lat order)
+                                (:lng order)])]
                             ["Tire Fill Up?"
                              :tire_pressure_check
                              #(if (:tire_pressure_check %)
