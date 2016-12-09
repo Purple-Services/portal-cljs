@@ -103,7 +103,15 @@
                              #(utils/cents->$dollars
                                (:service_fee %))]
                             ["Total" :total_price #(utils/cents->$dollars
-                                                    (:total_price %))]]}
+                                                    (:total_price %))]
+                            (when (datastore/account-manager?)
+                              ["User"
+                               #(:name
+                                 (utils/get-by-id @portal-cljs.datastore/users
+                                                  (:user_id %)))
+                               #(:name
+                                 (utils/get-by-id @portal-cljs.datastore/users
+                                                  (:user_id %)))])]}
              (get-current-orders-page orders)]])]]
        [:div {:class "row"}
         [:div {:class "col-lg-12"}
