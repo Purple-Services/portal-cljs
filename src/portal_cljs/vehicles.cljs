@@ -503,8 +503,7 @@
                                #(:name
                                  (utils/get-by-id @portal-cljs.datastore/users
                                                   (:user_id %)))])
-                            (when (or (datastore/account-manager?)
-                                      (not (datastore/is-child-user?)))
+                            (when-not (datastore/is-child-user?)
                               [""
                                (constantly true)
                                (fn [vehicle]
