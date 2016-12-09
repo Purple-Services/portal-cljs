@@ -74,7 +74,6 @@
                                     (str (datastore/account-manager-context-uri)
                                          "/user/" id))
                                   :edit-entity new-user
-                                  :current-entity (r/atom {})
                                   :alert-success alert-success
                                   :aux-fn
                                   (fn []

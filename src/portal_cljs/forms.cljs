@@ -51,8 +51,8 @@
   (edit-on-success \"user\" edit-user current-user alert-success)
   (edit-on-success \"coupon\" edit-coupon current-coupon alert-success)
   "
-  [{:keys [entity-type entity-get-url-fn edit-entity current-entity
-           alert-success aux-fn channel-topic]
+  [{:keys [entity-type entity-get-url-fn edit-entity alert-success aux-fn
+           channel-topic]
     :or {aux-fn (fn [] true)
          channel-topic (str entity-type "s")
          entity-get-url-fn (fn [id] (str base-url entity-type "/" id))}}]
@@ -70,8 +70,6 @@
                                     :errors nil
                                     :retrieving? false))
         (reset! alert-success "Successfully updated!")
-        (reset! current-entity
-                (first res))
         (aux-fn))))))
 
 (defn edit-on-error

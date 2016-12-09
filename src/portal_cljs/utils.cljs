@@ -1,4 +1,5 @@
-(ns portal-cljs.utils)
+(ns portal-cljs.utils
+  (:require [clojure.data :refer [diff]]))
 
 (def base-url (-> (.getElementById js/document "base-url")
                   (.getAttribute "value")))
@@ -112,3 +113,14 @@
   list if n does not exists"
   [coll n]
   (nth coll (- n 1) '()))
+
+(defn diff-message
+  "Given old and new hashmap, create message based on their diff"
+  [old new key-str]
+  (let [[new-map old-map unchanged] (clojure.data/diff old new)
+        concern (into [] (keys key-str))]
+    (filter
+     (comp not nil?)
+     (map #(when-not (contains? unchanged %)
+             (str (% key-str) " : " (% old-map) " -> " (% new-map)))
+          concern))))
