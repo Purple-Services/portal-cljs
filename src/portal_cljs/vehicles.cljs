@@ -160,13 +160,17 @@
 
 (defn form-vehicle->server-vehicle
   [vehicle]
-  (assoc vehicle
-         :make (:value (js->clj (:make vehicle)
-                                :keywordize-keys
-                                true))
-         :model (:value (js->clj (:model vehicle)
-                                 :keywordize-keys
-                                 true))))
+  (let [{:keys [make model]} vehicle
+        get-value (fn [js-val] (:value (js->clj js-val
+                                                :keywordize-keys
+                                                true)))
+        convert-select-val (fn [val]
+                             (if (string? val)
+                               val
+                               (get-value val)))]
+    (assoc vehicle
+           :make  (convert-select-val make)
+           :model (convert-select-val model))))
 
 (defn EditVehicleForm
   [vehicle]
@@ -185,12 +189,9 @@
                           :year "Year"
                           :color "Color"
                           :gas_type "Fuel Type"
-                          :only-top-tier? "Only Top Tier"
+                          :only_top_tier "Only Top Tier"
                           :license_plate "License Plate"
                           :user_id "User"}
-            vehicle->diff-msg-vehicle (fn [vehicle]
-                                        ()
-                                        )
             diff-msg-gen (fn [edit current]
                            (utils/diff-message
                             edit
@@ -448,7 +449,7 @@
         page-size 15
         selected-filter (r/atom "Active")
         filters {"Active"   {:filter-fn :active}
-                 "Inactive" {:filter-fn (comp not :active)}}
+                 "Deactivated" {:filter-fn (comp not :active)}}
         processed-vehicles (fn [vehicles]
                              (->
                               vehicles
