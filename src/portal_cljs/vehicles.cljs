@@ -1,5 +1,6 @@
 (ns portal-cljs.vehicles
-  (:require [portal-cljs.components :refer [TableFilterButtonGroup
+  (:require [cljsjs.react-select]
+            [portal-cljs.components :refer [TableFilterButtonGroup
                                             TablePager RefreshButton
                                             DynamicTable TextInput
                                             FormSubmit FormGroup
@@ -13,6 +14,9 @@
             [portal-cljs.utils :as utils]
             [portal-cljs.xhr :refer [process-json-response retrieve-url]]
             [reagent.core :as r]))
+
+(def AutoComplete
+  (r/adapt-react-class js/Select.Creatable))
 
 (def default-form-target
   [:div {:style {:display "none"}}])
@@ -60,17 +64,25 @@
         [:div {:class "col-lg-6 col-sm-12"}
          [FormGroup {:label "make"
                      :errors (:make @errors)}
-          [TextInput {:value @make
-                      :placeholder "Make"
-                      :on-change #(reset! make
-                                          (utils/get-input-value %))}]]]
+          [AutoComplete {:value @make
+                         :aria-labelledby "Make"
+                         :on-change (fn [value]
+                                      (reset! make value))
+                         :placeholder "Make"
+                         :options (clj->js [{:value "Honda" :label "Honda"}
+                                            {:value "Nissan" :label "Nissan"}])}
+           ]]]
         [:div {:class "col-lg-6 col-sm-12"}
-         [FormGroup {:label ""
+         [FormGroup {:label "model"
                      :errors (:model @errors)}
-          [TextInput {:value @model
-                      :placeholder "Model"
-                      :on-change #(reset! model
-                                          (utils/get-input-value %))}]]]]
+          [AutoComplete {:value @model
+                         :on-change (fn [value]
+                                      (reset! model value))
+                         :aria-labelledby "Model"
+                         :placeholder "Model"
+                         :options (clj->js [{:value "Accord" :label "Accord"}
+                                            {:value "Altima" :label "Altima"}])}
+           ]]]]
        [:div {:class "row"}
         [:div {:class "col-lg-6 col-sm-12"}
          [FormGroup {:label "year"
@@ -146,6 +158,16 @@
                                               user_id))
                       ""))))
 
+(defn form-vehicle->server-vehicle
+  [vehicle]
+  (assoc vehicle
+         :make (:value (js->clj (:make vehicle)
+                                :keywordize-keys
+                                true))
+         :model (:value (js->clj (:model vehicle)
+                                 :keywordize-keys
+                                 true))))
+
 (defn EditVehicleForm
   [vehicle]
   (let [edit-vehicle-state (r/cursor state [:edit-vehicle-state])
@@ -187,8 +209,10 @@
                            (map (fn [el]
                                   ^{:key el}
                                   [:h4 el])
-                                (diff-msg-gen-vehicle @edit-vehicle
-                                                      current-vehicle))])
+                                (diff-msg-gen-vehicle
+                                 (form-vehicle->server-vehicle
+                                  @edit-vehicle)
+                                 current-vehicle))])
             submit-on-click (fn [e]
                               (.preventDefault e)
                               (if @editing?
@@ -209,11 +233,11 @@
                                   (reset! editing? true))))
             confirm-on-click (fn [_]
                                (entity-save
-                                @edit-vehicle
+                                (form-vehicle->server-vehicle @edit-vehicle)
                                 (if (datastore/account-manager?)
                                   (str (datastore/account-manager-context-uri)
                                        "/edit-vehicle")
-                                  (str "user/" (get-user-id) "/edit-vehicle"))
+                                  (str utils/base-url "user/" (get-user-id) "/edit-vehicle"))
                                 "PUT"
                                 retrieving?
                                 (edit-on-success
@@ -257,7 +281,7 @@
                          (reset! confirming? false))]
         [:div {:class "form-border"
                :style {:margin-top "15px"}}
-         [:form {:class "form-horizontal"}
+         [:form
           [VehicleFormComp {:vehicle edit-vehicle
                             :errors errors}]
           [:div {:class "row"}
@@ -319,11 +343,12 @@
                                   (reset! editing? true))))
             confirm-on-click (fn [_]
                                (entity-save
-                                @new-vehicle
+                                (form-vehicle->server-vehicle
+                                 @new-vehicle)
                                 (if (datastore/account-manager?)
                                   (str (datastore/account-manager-context-uri)
                                        "/add-vehicle")
-                                  (str "user/" (get-user-id) "/add-vehicle"))
+                                  (str utils/base-url "user/" (get-user-id) "/add-vehicle"))
                                 "POST"
                                 retrieving?
                                 (edit-on-success
@@ -380,7 +405,9 @@
               :edit-btn-content "Create Vehicle"}]
             (when @confirming?
               [ConfirmationAlert
-               {:confirmation-message (fn [] (confirm-msg @new-vehicle))
+               {:confirmation-message
+                (fn [] (confirm-msg
+                        (form-vehicle->server-vehicle @new-vehicle)))
                 :cancel-on-click dismiss-fn
                 :confirm-on-click confirm-on-click
                 :retrieving? retrieving?}])]]]]))))
