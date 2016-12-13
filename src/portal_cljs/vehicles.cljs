@@ -1,5 +1,6 @@
 (ns portal-cljs.vehicles
-  (:require [cljsjs.react-select]
+  (:require [cljs.core.async :refer [put!]]
+            [cljsjs.react-select]
             [portal-cljs.components :refer [TableFilterButtonGroup
                                             TablePager RefreshButton
                                             DynamicTable TextInput
@@ -437,14 +438,73 @@
                                 (reset! new-editing? true))}
            [:i {:class "fa fa-plus"}] " Add"])))))
 
+(defn VehiclesTools
+  [vehicle]
+  (let [old-editing? (r/cursor state [:edit-vehicle-state :editing?])
+        edit-vehicle (r/cursor state [:edit-vehicle-state :edit-vehicle])
+        form-target (r/cursor state [:form-target])]
+    (fn [vehicle]
+      [:div
+       [:a {:on-click
+            (fn [_]
+              (reset! old-editing? true)
+              (reset! edit-vehicle
+                      (utils/get-by-id
+                       @datastore/vehicles
+                       (:id vehicle)))
+              (reset! form-target [EditVehicleForm
+                                   @edit-vehicle]))}
+        [:i {:class (str "fa fa-pencil-square-o fa-2 "
+                         "fake-link")}]]
+       (let [retrieving? (:retrieving? vehicle)
+             active? (:active vehicle)
+             switch-status
+             (fn [_]
+               (put! datastore/modify-data-chan
+                     {:topic "vehicles"
+                      :data [(assoc vehicle :retrieving? true)]})
+               (entity-save
+                (assoc vehicle
+                       :active
+                       (not active?))
+                (if (datastore/account-manager?)
+                  (str (datastore/account-manager-context-uri)
+                       "/edit-vehicle")
+                  (str utils/base-url "user/" (get-user-id) "/edit-vehicle"))
+                "PUT"
+                (r/atom {})
+                (edit-on-success
+                 {:entity-type "vehicle"
+                  :entity-get-url-fn
+                  (fn [id]
+                    (if (datastore/account-manager?)
+                      (str
+                       (datastore/account-manager-context-uri)
+                       "/vehicle/" id)
+                      (str utils/base-url
+                           "user/"
+                           (get-user-id)
+                           "/vehicle/"
+                           id)))
+                  :edit-entity (r/atom {})
+                  :alert-success (r/atom {})})
+                (fn [_]
+                  (.log js/console "Something unexpected occured"))))]
+         (if retrieving?
+           [:i {:class (str "fa fa-2 fa-spinner fa-pulse")}]
+           [:a {:on-click
+                switch-status
+                :class "fake-link"}
+            (if active?
+              "Deactivate"
+              "Activate")]))])))
+
 (defn VehiclesPanel
   [vehicles]
   (let [current-vehicle (r/cursor state [:current-vehicle])
-        edit-vehicle (r/cursor state [:edit-vehicle-state :edit-vehicle])
         form-target (r/cursor state [:form-target])
         sort-keyword (r/atom :make)
         sort-reversed? (r/atom false)
-        old-editing? (r/cursor state [:edit-vehicle-state :editing?])
         current-page (r/atom 1)
         page-size 15
         selected-filter (r/atom "Active")
@@ -534,18 +594,7 @@
                             (when-not (datastore/is-child-user?)
                               [""
                                (constantly true)
-                               (fn [vehicle]
-                                 [:a {:on-click
-                                      (fn [_]
-                                        (reset! old-editing? true)
-                                        (reset! edit-vehicle
-                                                (utils/get-by-id
-                                                 @datastore/vehicles
-                                                 (:id vehicle)))
-                                        (reset! form-target [EditVehicleForm
-                                                             @edit-vehicle]))}
-                                  [:i {:class (str "fa fa-pencil-square-o fa-2 "
-                                                   "fake-link")}]])])]}
+                               (fn [vehicle] [VehiclesTools vehicle])])]}
              (get-current-vehicles-page vehicles)]])]]
        (when-not (empty? vehicles)
          [:div {:class "row"}
