@@ -121,7 +121,8 @@
         [:div {:class "form-border"
                :style {:margin-top "15px"}}
          [:form {:class "form-horizontal"}
-          [UserFormComp new-user errors]
+          [UserFormComp {:user new-user
+                         :errors errors}]
           [:div {:class "row"}
            [:div {:class "col-lg-12"}
             [SubmitDismissConfirmGroup
