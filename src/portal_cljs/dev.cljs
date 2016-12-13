@@ -8,4 +8,4 @@
   []
   (core/init-app)
   (utils/select-toggle-key! (r/cursor state/landing-state [:tab-content-toggle])
-                            :vehicles-view))
+                            :users-view))

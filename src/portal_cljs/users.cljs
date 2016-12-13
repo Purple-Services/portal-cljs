@@ -28,6 +28,26 @@
                                      :retrieving? false}
                     :form-target default-form-target}))
 
+(defn UserFormComp
+  [{:keys [user errors]}]
+  (fn [{:keys [user errors]}]
+    (let [email (r/cursor user [:email])
+          full-name (r/cursor user [:full-name])]
+      [:div {:class "row"}
+       [:div {:class "col-lg-6 col-sm-6"}
+        [FormGroup {:label "email"
+                    :errors (:email @errors)}
+         [TextInput {:value @email
+                     :placeholder "Email Address"
+                     :on-change #(reset! email
+                                         (utils/get-input-value %))}]]]
+       [:div {:class "col-lg-6 col-sm-6"}
+        [FormGroup {:label "full-name"
+                    :errors (:full-name @errors)}
+         [TextInput {:value @full-name
+                     :placeholder "User's Full Name"
+                     :on-change #(reset! full-name
+                                         (utils/get-input-value %))}]]]])))
 (defn AddUserForm
   []
   (let [add-user-state (r/cursor state [:add-user-state])
@@ -101,21 +121,7 @@
         [:div {:class "form-border"
                :style {:margin-top "15px"}}
          [:form {:class "form-horizontal"}
-          [:div {:class "row"}
-           [:div {:class "col-lg-6 col-sm-6"}
-            [FormGroup {:label "email"
-                        :errors (:email @errors)}
-             [TextInput {:value @email
-                         :placeholder "Email Address"
-                         :on-change #(reset! email
-                                             (utils/get-input-value %))}]]]
-           [:div {:class "col-lg-6 col-sm-6"}
-            [FormGroup {:label "full-name"
-                        :errors (:full-name @errors)}
-             [TextInput {:value @full-name
-                         :placeholder "User's Full Name"
-                         :on-change #(reset! full-name
-                                             (utils/get-input-value %))}]]]]
+          [UserFormComp new-user errors]
           [:div {:class "row"}
            [:div {:class "col-lg-12"}
             [SubmitDismissConfirmGroup
@@ -130,8 +136,7 @@
                {:confirmation-message (fn [] (confirm-msg @new-user))
                 :cancel-on-click dismiss-fn
                 :confirm-on-click confirm-on-click
-                :retrieving? retrieving?
-                }])]]]]))))
+                :retrieving? retrieving?}])]]]]))))
 
 (defn AddUser
   [state]
@@ -223,8 +228,8 @@
                             ["Email" :email :email]
                             ["Phone Number" :phone_number :phone_number]
                             ["Manager?" :is-manager #(if (:is-manager %)
-                                                      "Yes"
-                                                      "No")]
+                                                       "Yes"
+                                                       "No")]
                             ["Created" :timestamp_created
                              #(utils/unix-epoch->fmt
                                (:timestamp_created %) "M/D/YYYY")]]}
