@@ -18,7 +18,8 @@
   [:div {:style {:display "none"}}])
 
 (def default-new-user {:email ""
-                       :full-name ""})
+                       :name ""
+                       :phone_number ""})
 
 (def state (r/atom {:current-user nil
                     :alert-success ""
@@ -32,7 +33,7 @@
   [{:keys [user errors]}]
   (fn [{:keys [user errors]}]
     (let [email (r/cursor user [:email])
-          full-name (r/cursor user [:full-name])]
+          name (r/cursor user [:name])]
       [:div {:class "row"}
        [:div {:class "col-lg-6 col-sm-6"}
         [FormGroup {:label "email"
@@ -42,18 +43,16 @@
                      :on-change #(reset! email
                                          (utils/get-input-value %))}]]]
        [:div {:class "col-lg-6 col-sm-6"}
-        [FormGroup {:label "full-name"
-                    :errors (:full-name @errors)}
-         [TextInput {:value @full-name
+        [FormGroup {:label "name"
+                    :errors (:name @errors)}
+         [TextInput {:value @name
                      :placeholder "User's Full Name"
-                     :on-change #(reset! full-name
+                     :on-change #(reset! name
                                          (utils/get-input-value %))}]]]])))
 (defn AddUserForm
   []
   (let [add-user-state (r/cursor state [:add-user-state])
         new-user (r/cursor add-user-state [:new-user])
-        email (r/cursor new-user [:email])
-        full-name (r/cursor new-user [:full-name])
         retrieving? (r/cursor add-user-state [:retrieving?])
         confirming? (r/cursor add-user-state [:confirming?])
         editing? (r/cursor add-user-state [:editing?])
@@ -62,12 +61,12 @@
     (fn []
       (let [;; helper fns
             confirm-msg (fn [new-user]
-                          (let [{:keys [email full-name]} new-user]
+                          (let [{:keys [email name]} new-user]
                             [:div
                              [:p (str "Are you sure you want to create a new "
                                       "user with the following values?")]
                              [:h4 "Email: " email]
-                             [:h4 "Full Name: " full-name]
+                             [:h4 "Full Name: " name]
                              [:p (str "A set password email wil be sent to "
                                       email ". Their account will be pending "
                                       "until they have set their password."
