@@ -29,6 +29,21 @@
                   "Biege", "Cream","Yellow", "Gold", "Green", "Pink", "Purple",
                   "Copper", "Camo"])))
 
+(def car-makes
+  (clj->js (mapv #(hash-map :value %
+                            :label %)
+                 ["Ford," "Honda", "Nissan", "Toyota"])))
+
+(def car-models
+  (clj->js (mapv #(hash-map :value %
+                            :label %)
+                 ["Altima", "Celica", "Civic", "Cruze", "Element", "F150"])))
+
+(def car-years
+  (clj->js (mapv #(hash-map :value (str %)
+                            :label (str %))
+                 (range 1965 2017))))
+
 (def default-new-vehicle {:user_id (get-user-id)
                           :active true
                           :year ""
@@ -77,8 +92,7 @@
                          :on-change (fn [value]
                                       (reset! year value))
                          :placeholder "Year"
-                         :options (clj->js [{:value "2016" :label "2016"}
-                                            {:value "2015" :label "2015"}])}]]]
+                         :options car-years}]]]
         [:div {:class "col-lg-4 col-sm-12"}
          [FormGroup {:label "make"
                      :errors (:make @errors)}
@@ -87,8 +101,7 @@
                          :on-change (fn [value]
                                       (reset! make value))
                          :placeholder "Make"
-                         :options (clj->js [{:value "Honda" :label "Honda"}
-                                            {:value "Nissan" :label "Nissan"}])}]]]
+                         :options car-makes}]]]
         [:div {:class "col-lg-4 col-sm-12"}
          [FormGroup {:label "model"
                      :errors (:model @errors)}
@@ -97,8 +110,7 @@
                                       (reset! model value))
                          :aria-labelledby "Model"
                          :placeholder "Model"
-                         :options (clj->js [{:value "Accord" :label "Accord"}
-                                            {:value "Altima" :label "Altima"}])}]]]]
+                         :options car-models}]]]]
        [:div {:class "row"}
         [:div {:class "col-lg-6 col-sm-12"}
          [FormGroup {:label "color"
