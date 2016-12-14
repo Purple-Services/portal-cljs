@@ -62,7 +62,14 @@
           license-plate (r/cursor vehicle [:license_plate])]
       [:div
        [:div {:class "row"}
-        [:div {:class "col-lg-6 col-sm-12"}
+        [:div {:class "col-lg-4 col-sm-12"}
+         [FormGroup {:label "year"
+                     :errors (:year @errors)}
+          [TextInput {:value @year
+                      :placeholder "Year"
+                      :on-change #(reset! year
+                                          (utils/get-input-value %))}]]]
+        [:div {:class "col-lg-4 col-sm-12"}
          [FormGroup {:label "make"
                      :errors (:make @errors)}
           [AutoComplete {:value @make
@@ -71,9 +78,8 @@
                                       (reset! make value))
                          :placeholder "Make"
                          :options (clj->js [{:value "Honda" :label "Honda"}
-                                            {:value "Nissan" :label "Nissan"}])}
-           ]]]
-        [:div {:class "col-lg-6 col-sm-12"}
+                                            {:value "Nissan" :label "Nissan"}])}]]]
+        [:div {:class "col-lg-4 col-sm-12"}
          [FormGroup {:label "model"
                      :errors (:model @errors)}
           [AutoComplete {:value @model
@@ -82,24 +88,16 @@
                          :aria-labelledby "Model"
                          :placeholder "Model"
                          :options (clj->js [{:value "Accord" :label "Accord"}
-                                            {:value "Altima" :label "Altima"}])}
-           ]]]]
+                                            {:value "Altima" :label "Altima"}])}]]]]
        [:div {:class "row"}
         [:div {:class "col-lg-6 col-sm-12"}
-         [FormGroup {:label "year"
-                     :errors (:year @errors)}
-          [TextInput {:value @year
-                      :placeholder "Year"
-                      :on-change #(reset! year
-                                          (utils/get-input-value %))}]]]
-        [:div {:class "col-lg-3 col-sm-12"}
          [FormGroup {:label "color"
                      :errors (:color @errors)}
           [TextInput {:value @color
                       :placeholder "Color"
                       :on-change #(reset! color
                                           (utils/get-input-value %))}]]]
-        [:div {:class "col-lg-3 col-sm-12"}
+        [:div {:class "col-lg-6 col-sm-12"}
          [FormGroup {:label ""
                      :errors (:license_plate @errors)}
           [TextInput {:value @license-plate

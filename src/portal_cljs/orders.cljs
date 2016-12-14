@@ -39,7 +39,7 @@
                      (reset! refreshing? true)
                      (datastore/retrieve-orders!
                       {:after-response
-                       (reset! refreshing? false)}))
+                       #(reset! refreshing? false)}))
         time-limit (fn [order]
                      (str (.diff (js/moment.unix (:target_time_end order))
                                  (js/moment.unix (:target_time_start order))
