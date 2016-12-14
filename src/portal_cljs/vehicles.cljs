@@ -22,6 +22,13 @@
 (def default-form-target
   [:div {:style {:display "none"}}])
 
+(def car-colors
+  (clj->js (mapv #(hash-map :value %
+                            :label %)
+                 ["White", "Black", "Silver", "Gray", "Red", "Blue", "Brown",
+                  "Biege", "Cream","Yellow", "Gold", "Green", "Pink", "Purple",
+                  "Copper", "Camo"])))
+
 (def default-new-vehicle {:user_id (get-user-id)
                           :active true
                           :year ""
@@ -93,10 +100,12 @@
         [:div {:class "col-lg-6 col-sm-12"}
          [FormGroup {:label "color"
                      :errors (:color @errors)}
-          [TextInput {:value @color
-                      :placeholder "Color"
-                      :on-change #(reset! color
-                                          (utils/get-input-value %))}]]]
+          [AutoComplete {:value @color
+                         :on-change (fn [value]
+                                      (reset! color value))
+                         :aria-labelledby "Color"
+                         :placeholder "Color"
+                         :options car-colors}]]]
         [:div {:class "col-lg-6 col-sm-12"}
          [FormGroup {:label ""
                      :errors (:license_plate @errors)}
@@ -159,7 +168,7 @@
 
 (defn form-vehicle->server-vehicle
   [vehicle]
-  (let [{:keys [make model]} vehicle
+  (let [{:keys [make model color]} vehicle
         get-value (fn [js-val] (:value (js->clj js-val
                                                 :keywordize-keys
                                                 true)))
@@ -169,7 +178,8 @@
                                (get-value val)))]
     (assoc vehicle
            :make  (convert-select-val make)
-           :model (convert-select-val model))))
+           :model (convert-select-val model)
+           :color (convert-select-val color))))
 
 (defn EditVehicleForm
   [vehicle]
