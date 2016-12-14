@@ -393,7 +393,7 @@
                          (reset! confirming? false))]
         [:div {:class "form-border"
                :style {:margin-top "15px"}}
-         [:form {:class "form-horizontal"}
+         [:form
           [VehicleFormComp {:vehicle new-vehicle
                             :errors errors}]
           [:div {:class "row"}

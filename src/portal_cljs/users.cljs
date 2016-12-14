@@ -58,14 +58,14 @@
         [FormGroup {:label "name"
                     :errors (:name @errors)}
          [TextInput {:value @name
-                     :placeholder "User's Full Name"
+                     :placeholder "Full Name"
                      :on-change #(reset! name
                                          (utils/get-input-value %))}]]]
        [:div {:class "col-lg-4 col-sm-4"}
         [FormGroup {:label "phone-number"
                     :errors (:phone_number @errors)}
          [TextInput {:value @phone-number
-                     :placeholder "User's Phone Number"
+                     :placeholder "Phone Number"
                      :on-change #(reset! phone-number
                                          (utils/get-input-value %))}]]]])))
 
