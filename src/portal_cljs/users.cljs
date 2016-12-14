@@ -1,5 +1,6 @@
 (ns portal-cljs.users
-  (:require [portal-cljs.components :refer [TableFilterButtonGroup
+  (:require [cljs.core.async :refer [put!]]
+            [portal-cljs.components :refer [TableFilterButtonGroup
                                             TablePager RefreshButton
                                             DynamicTable TextInput
                                             FormSubmit FormGroup
@@ -33,21 +34,29 @@
   [{:keys [user errors]}]
   (fn [{:keys [user errors]}]
     (let [email (r/cursor user [:email])
-          name (r/cursor user [:name])]
+          name (r/cursor user [:name])
+          phone-number (r/cursor user [:phone_number])]
       [:div {:class "row"}
-       [:div {:class "col-lg-6 col-sm-6"}
+       [:div {:class "col-lg-4 col-sm-4"}
         [FormGroup {:label "email"
                     :errors (:email @errors)}
          [TextInput {:value @email
                      :placeholder "Email Address"
                      :on-change #(reset! email
                                          (utils/get-input-value %))}]]]
-       [:div {:class "col-lg-6 col-sm-6"}
+       [:div {:class "col-lg-4 col-sm-4"}
         [FormGroup {:label "name"
                     :errors (:name @errors)}
          [TextInput {:value @name
                      :placeholder "User's Full Name"
                      :on-change #(reset! name
+                                         (utils/get-input-value %))}]]]
+       [:div {:class "col-lg-4 col-sm-4"}
+        [FormGroup {:label "phone-number"
+                    :errors (:phone_number @errors)}
+         [TextInput {:value @phone-number
+                     :placeholder "User's Phone Number"
+                     :on-change #(reset! phone-number
                                          (utils/get-input-value %))}]]]])))
 (defn AddUserForm
   []
@@ -119,7 +128,7 @@
                          (reset! confirming? false))]
         [:div {:class "form-border"
                :style {:margin-top "15px"}}
-         [:form {:class "form-horizontal"}
+         [:form
           [UserFormComp {:user new-user
                          :errors errors}]
           [:div {:class "row"}
@@ -141,21 +150,81 @@
 (defn AddUser
   [state]
   (let [add-user-state (r/cursor state [:add-user-state])
-        editing? (r/cursor add-user-state [:editing?])
+        new-editing? (r/cursor add-user-state [:editing?])
+        old-editing? (r/cursor state [:edit-user-state :editing?])
         form-target (r/cursor state [:form-target])
         new-user (r/cursor add-user-state [:new-user])]
     (fn [state]
-      (when @editing?
-        (reset! new-user default-new-user)
-        (reset! form-target [AddUserForm])
-        default-form-target)
-      (when-not @editing?
-        (reset! form-target default-form-target)
-        [:button {:type "button"
-                  :class "btn btn-default"
-                  :on-click (fn [e]
-                              (reset! editing? true))}
-         [:i {:class "fa fa-plus"}] " Add"]))))
+      (when-not (datastore/is-child-user?)
+        (when @new-editing?
+          (reset! new-user default-new-user)
+          (when-not @old-editing?
+            (reset! form-target [AddUserForm]))
+          default-form-target)
+        (when-not (or @new-editing?
+                      @old-editing?)
+          (reset! form-target default-form-target)
+          [:button {:type "button"
+                    :class "btn btn-default"
+                    :on-click (fn [e]
+                                (reset! new-editing? true))}
+           [:i {:class "fa fa-plus"}] " Add"])))))
+
+(defn UsersTools
+  [user]
+  (let [old-editing? (r/cursor state [:edit-user-state :editing?])
+        edit-user (r/cursor state [:edit-user-state :edit-user])
+        form-target (r/cursor state [:form-target])]
+    (fn [user]
+      [:div
+       [:a {:on-click
+            (fn [_]
+              (reset! old-editing? true)
+              (reset! edit-user
+                      (utils/get-by-id
+                       @datastore/users
+                       (:id user)))
+              #_ (reset! form-target [EditUserForm
+                                      @edit-user])
+              (.log js/console "I would have edited a user"))}
+        [:i {:class (str "fa fa-pencil-square-o fa-2 "
+                         "fake-link")}]]
+       (when-not (:is-manager user)
+         (let [retrieving? (:retrieving? user)
+               active? (:active user)
+               switch-status
+               (fn [_]
+                 (.log js/console "I would have switched the status of user")
+                 (put! datastore/modify-data-chan
+                       {:topic "users"
+                        :data [(assoc user :retrieving? true)]})
+                 (entity-save
+                  (assoc user
+                         :active
+                         (not active?))
+                  (str (datastore/account-manager-context-uri)
+                       "/edit-user")
+                  "PUT"
+                  (r/atom {})
+                  (edit-on-success
+                   {:entity-type "user"
+                    :entity-get-url-fn
+                    (fn [id]
+                      (str
+                       (datastore/account-manager-context-uri)
+                       "/user/" id))
+                    :edit-entity (r/atom {})
+                    :alert-success (r/atom {})})
+                  (fn [_]
+                    (.log js/console "Something unexpected occured"))))]
+           (if retrieving?
+             [:i {:class (str "fa fa-2 fa-spinner fa-pulse")}]
+             [:a {:on-click
+                  switch-status
+                  :class "fake-link"}
+              (if active?
+                "Deactivate"
+                "Activate")])))])))
 
 (defn UsersPanel
   [users]
@@ -166,7 +235,8 @@
         page-size 15
         selected-filter (r/atom "Active")
         filters {"Pending"  {:filter-fn :pending}
-                 "Active" {:filter-fn (comp not :pending)}}
+                 "Active" {:filter-fn :active}
+                 "Deactivated" {:filter-fn (comp not :active)}}
         processed-users (fn [users]
                           (->
                            users
@@ -232,7 +302,10 @@
                                                        "No")]
                             ["Created" :timestamp_created
                              #(utils/unix-epoch->fmt
-                               (:timestamp_created %) "M/D/YYYY")]]}
+                               (:timestamp_created %) "M/D/YYYY")]
+                            [""
+                             (constantly true)
+                             (fn [user] [UsersTools user])]]}
              (get-current-users-page users)]])]]
        [:div {:class "row"}
         [:div {:class "col-lg-12"}

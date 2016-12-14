@@ -168,7 +168,7 @@
       (when-not (empty? response)
         (put! modify-data-chan
               {:topic "vehicles"
-               :data response}))
+               :data (map #(assoc % :retrieving? false) response)}))
       (after-response)))))
 
 (defn retrieve-orders!
@@ -185,7 +185,7 @@
       (when-not (empty? response)
         (put! modify-data-chan
               {:topic "orders"
-               :data response}))
+               :data (map #(assoc % :retrieving? false) response)}))
       (after-response)))))
 
 (defn retrieve-users!
