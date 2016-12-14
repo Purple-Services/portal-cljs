@@ -72,10 +72,13 @@
         [:div {:class "col-lg-4 col-sm-12"}
          [FormGroup {:label "year"
                      :errors (:year @errors)}
-          [TextInput {:value @year
-                      :placeholder "Year"
-                      :on-change #(reset! year
-                                          (utils/get-input-value %))}]]]
+          [AutoComplete {:value @year
+                         :aria-labelledby "Year"
+                         :on-change (fn [value]
+                                      (reset! year value))
+                         :placeholder "Year"
+                         :options (clj->js [{:value "2016" :label "2016"}
+                                            {:value "2015" :label "2015"}])}]]]
         [:div {:class "col-lg-4 col-sm-12"}
          [FormGroup {:label "make"
                      :errors (:make @errors)}
@@ -168,7 +171,7 @@
 
 (defn form-vehicle->server-vehicle
   [vehicle]
-  (let [{:keys [make model color]} vehicle
+  (let [{:keys [make model color year]} vehicle
         get-value (fn [js-val] (:value (js->clj js-val
                                                 :keywordize-keys
                                                 true)))
@@ -179,7 +182,8 @@
     (assoc vehicle
            :make  (convert-select-val make)
            :model (convert-select-val model)
-           :color (convert-select-val color))))
+           :color (convert-select-val color)
+           :year  (convert-select-val year))))
 
 (defn EditVehicleForm
   [vehicle]
@@ -333,7 +337,7 @@
                              [:h4 "Model: " model]
                              [:h4 "Year: " year]
                              [:h4 "Color: " color]
-                             [:h4 "Fuel Type: " gas_type]
+                             [:h4 "Fuel Type: " (str gas_type " Octane")]
                              [:h4 "Only Top Tier: " (if only-top-tier?
                                                       "Yes"
                                                       "No")]
