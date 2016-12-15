@@ -207,12 +207,13 @@
     (fn []
       (let [;; helper fns
             confirm-msg (fn [new-user]
-                          (let [{:keys [email name]} new-user]
+                          (let [{:keys [email name phone_number]} new-user]
                             [:div
                              [:p (str "Are you sure you want to create a new "
                                       "user with the following values?")]
                              [:h4 "Email: " email]
                              [:h4 "Full Name: " name]
+                             [:h4 "Phone Number: " phone_number]
                              [:p (str "A set password email wil be sent to "
                                       email ". Their account will be pending "
                                       "until they have set their password."
