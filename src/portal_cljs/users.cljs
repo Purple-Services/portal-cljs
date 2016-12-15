@@ -321,9 +321,9 @@
                        @datastore/users
                        (:id user)))
               (reset! form-target [EditUserForm
-                                   @edit-user]))}
-        [:i {:class (str "fa fa-pencil-square-o fa-2 "
-                         "fake-link")}]]
+                                   @edit-user]))
+            :class "fake-link"}
+        "Edit"]
        (when-not (:is-manager user)
          (let [retrieving? (:retrieving? user)
                active? (:active user)
@@ -355,7 +355,8 @@
              [:i {:class (str "fa fa-2 fa-spinner fa-pulse")}]
              [:a {:on-click
                   switch-status
-                  :class "fake-link"}
+                  :class "fake-link"
+                  :style {:padding-left "0.5em"}}
               (if active?
                 "Deactivate"
                 "Activate")])))])))

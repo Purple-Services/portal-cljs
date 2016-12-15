@@ -503,9 +503,9 @@
                        @datastore/vehicles
                        (:id vehicle)))
               (reset! form-target [EditVehicleForm
-                                   @edit-vehicle]))}
-        [:i {:class (str "fa fa-pencil-square-o fa-2 "
-                         "fake-link")}]]
+                                   @edit-vehicle]))
+            :class "fake-link"}
+        "Edit"]
        (let [retrieving? (:retrieving? vehicle)
              active? (:active vehicle)
              switch-status
@@ -544,7 +544,8 @@
            [:i {:class (str "fa fa-2 fa-spinner fa-pulse")}]
            [:a {:on-click
                 switch-status
-                :class "fake-link"}
+                :class "fake-link"
+                :style {:padding-left "0.5em"}}
             (if active?
               "Deactivate"
               "Activate")]))])))
