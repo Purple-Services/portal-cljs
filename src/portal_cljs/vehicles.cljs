@@ -17,13 +17,37 @@
             [portal-cljs.xhr :refer [process-json-response retrieve-url]]
             [reagent.core :as r]))
 
-(.log js/console (clj->js (:1899 vehicles-list/vehicles-list)))
-
 (def AutoComplete
   (r/adapt-react-class js/Select.Creatable))
 
 (def default-form-target
   [:div {:style {:display "none"}}])
+
+(def vehicle-years
+  (clj->js (mapv #(hash-map :value (str %)
+                            :label (str %))
+                 (map name (sort (keys vehicles-list/vehicles-list))))))
+
+(defn available-makes
+  [year]
+  (into [] (sort (map name (keys ((keyword year)
+                                  vehicles-list/vehicles-list))))))
+(defn vehicle-makes
+  [year]
+  (clj->js (mapv #(hash-map :value %
+                            :label %)
+                 (available-makes year))))
+
+(defn available-models
+  [year make]
+  (into [] (sort ((keyword make)
+                  ((keyword year) vehicles-list/vehicles-list)))))
+
+(defn vehicle-models
+  [year make]
+  (clj->js (mapv #(hash-map :value %
+                            :label %)
+                 (available-models year make))))
 
 (def car-colors
   (clj->js (mapv #(hash-map :value %
@@ -31,21 +55,6 @@
                  ["White", "Black", "Silver", "Gray", "Red", "Blue", "Brown",
                   "Biege", "Cream","Yellow", "Gold", "Green", "Pink", "Purple",
                   "Copper", "Camo"])))
-
-(def car-makes
-  (clj->js (mapv #(hash-map :value %
-                            :label %)
-                 ["Ford," "Honda", "Nissan", "Toyota"])))
-
-(def car-models
-  (clj->js (mapv #(hash-map :value %
-                            :label %)
-                 ["Altima", "Celica", "Civic", "Cruze", "Element", "F150"])))
-
-(def car-years
-  (clj->js (mapv #(hash-map :value (str %)
-                            :label (str %))
-                 (range 1965 2017))))
 
 (def default-new-vehicle {:user_id (get-user-id)
                           :active true
@@ -73,6 +82,19 @@
   (reset! (r/cursor state [:add-vehicle-state :editing?]) false)
   (reset! (r/cursor state [:edit-vehicle-state :editing?]) false))
 
+;; this is a hack for now. It should be that
+;; (= vehicle (form-vehicle->server-vehicle
+;; (server-vehicle->form-vehicle vehicle)))
+;; this would also mean changing the user, octane select
+;; options
+;; perhaps some other parts of the form as well
+(defn get-Select-val
+  [val]
+  (if (string? val)
+    val
+    (:value (js->clj val
+                     :keywordize-keys
+                     true))))
 (defn VehicleFormComp
   [{:keys [vehicle errors]}]
   (fn [{:keys [vehicle errors]}]
@@ -95,7 +117,7 @@
                          :on-change (fn [value]
                                       (reset! year value))
                          :placeholder "Year"
-                         :options car-years}]]]
+                         :options vehicle-years}]]]
         [:div {:class "col-lg-4 col-sm-12"}
          [FormGroup {:label "make"
                      :errors (:make @errors)}
@@ -104,7 +126,8 @@
                          :on-change (fn [value]
                                       (reset! make value))
                          :placeholder "Make"
-                         :options car-makes}]]]
+                         :options (vehicle-makes
+                                   (get-Select-val @year))}]]]
         [:div {:class "col-lg-4 col-sm-12"}
          [FormGroup {:label "model"
                      :errors (:model @errors)}
@@ -113,7 +136,9 @@
                                       (reset! model value))
                          :aria-labelledby "Model"
                          :placeholder "Model"
-                         :options car-models}]]]]
+                         :options (vehicle-models
+                                   (get-Select-val @year)
+                                   (get-Select-val @make))}]]]]
        [:div {:class "row"}
         [:div {:class "col-lg-6 col-sm-12"}
          [FormGroup {:label "color"
