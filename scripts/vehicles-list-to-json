@@ -1,0 +1,21 @@
+#!/bin/bash
+# this script requires that node.js is installed
+
+# filename is location of vehicleList.js of the app
+filename=~/Purple-Services/app/resources/json/vehicleList.js
+destination_cljs=~/Purple-Services/portal-cljs/src/portal_cljs/vehicles_list.cljs
+temp_js=~/Purple-Services/portal-cljs/vehiclesList.js
+node_script=~/Purple-Services/portal-cljs/scripts/vehicles-list-to-json.js
+vehicles_js=`perl -pe 's/window.vehicleList/var vehiclesList/' $filename`
+echo $vehicles_js > $temp_js
+node $node_script
+vehicles_json_file=~/Purple-Services/portal-cljs/vehiclesList.json
+vehicles_json=`perl -pe 's/"/\\\"/g' $vehicles_json_file`
+printf "(ns portal-cljs.vehicles-list)\n\n" > $destination_cljs
+printf "(def vehicles-list (js->clj (js/JSON.parse " >> $destination_cljs
+printf '"' >> $destination_cljs
+echo $vehicles_json >> $destination_cljs
+printf '"' >> $destination_cljs
+printf ") :keywordize-keys true))" >> $destination_cljs
+rm $temp_js
+rm $vehicles_json_file

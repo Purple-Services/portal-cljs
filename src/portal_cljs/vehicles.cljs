@@ -13,8 +13,11 @@
             [portal-cljs.forms :refer [entity-save edit-on-success
                                        edit-on-error]]
             [portal-cljs.utils :as utils]
+            [portal-cljs.vehicles-list :as vehicles-list]
             [portal-cljs.xhr :refer [process-json-response retrieve-url]]
             [reagent.core :as r]))
+
+(.log js/console (clj->js (:1899 vehicles-list/vehicles-list)))
 
 (def AutoComplete
   (r/adapt-react-class js/Select.Creatable))
