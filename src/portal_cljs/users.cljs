@@ -369,8 +369,10 @@
         current-page (r/atom 1)
         page-size 15
         selected-filter (r/atom "Active")
-        filters {"Pending"  {:filter-fn :pending}
-                 "Active" {:filter-fn :active}
+        filters {"Pending" {:filter-fn #(and (:active %)
+                                             (:pending %))}
+                 "Active" {:filter-fn #(and (:active %)
+                                            (not (:pending %)))}
                  "Deactivated" {:filter-fn (comp not :active)}}
         processed-users (fn [users]
                           (->
