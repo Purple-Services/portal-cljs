@@ -65,7 +65,7 @@
         [FormGroup {:label "phone-number"
                     :errors (:phone_number @errors)}
          [TextInput {:value @phone-number
-                     :placeholder "Phone Number"
+                     :placeholder "Phone Number (optional)"
                      :on-change #(reset! phone-number
                                          (utils/get-input-value %))}]]]])))
 

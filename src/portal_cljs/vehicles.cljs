@@ -624,7 +624,10 @@
                             ["Model" :model :model]
                             ["Color" :color :color]
                             ["Year" :year :year]
-                            ["License Plate" :license_plate :license_plate]
+                            ["License Plate" :license_plate
+                             (fn [vehicle]
+                               [:span {:style {:text-transform "uppercase"}}
+                                (:license_plate vehicle)])]
                             ["Fuel Type" :gas_type #(str (:gas_type %)
                                                          (when
                                                              (contains?

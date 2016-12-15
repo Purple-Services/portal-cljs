@@ -83,8 +83,12 @@
                              #(utils/unix-epoch->fuller
                                (:target_time_start %))]
                             ["Time" time-limit time-limit]
-                            ["Vehicle" :vehicle_description :vehicle_description]
-                            ["Plate" :license_plate :license_plate]
+                            ["Vehicle" :vehicle_description
+                             :vehicle_description]
+                            ["Plate" :license_plate
+                             (fn [vehicle]
+                               [:span {:style {:text-transform "uppercase"}}
+                                (:license_plate vehicle)])]
                             ["Location" :address_street
                              (fn [order]
                                [GoogleMapLink

@@ -91,9 +91,9 @@
   (fn [row-item]
     (let [{:keys [current-item on-click cells]} props]
       ^{:key (:id row-item)}
-      [:tr {:class (when (= (:id row-item)
-                            (:id @current-item))
-                     "active")
+      [:tr {;; :class (when (= (:id row-item)
+            ;;                 (:id @current-item))
+            ;;          "active")
             :on-click (fn [event]
                         (on-click event row-item))}
        (doall (map (fn [[cell-fn]]
