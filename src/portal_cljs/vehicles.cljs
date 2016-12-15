@@ -237,14 +237,14 @@
       (let [current-vehicle vehicle ; before changes made to the the vehicle
             edit-vehicle (r/cursor edit-vehicle-state [:edit-vehicle])
             ;; helper fns
-            diff-key-str {:make "Make"
+            diff-key-str {:year "Year"
+                          :make "Make"
                           :model "Model"
-                          :year "Year"
                           :color "Color"
-                          :gas_type "Fuel Type"
-                          :only_top_tier "Only Top Tier"
                           :license_plate "License Plate"
-                          :user_id "User"}
+                          :user_id "User"
+                          :gas_type "Fuel Type"
+                          :only_top_tier "Only Top Tier"}
             diff-msg-gen (fn [edit current]
                            (utils/diff-message
                             edit
@@ -367,26 +367,26 @@
       (let [;; helper fns
             confirm-msg (fn [new-vehicle]
                           (let [{:keys [make model year
-                                        color gas_type only-top-tier?
+                                        color gas_type only_top_tier
                                         license_plate active? user_id]}
                                 new-vehicle]
                             [:div
                              [:p (str "Are you sure you want to create a new "
                                       "vehicle with the following values?")]
+                             [:h4 "Year: " year]
                              [:h4 "Make: " make]
                              [:h4 "Model: " model]
-                             [:h4 "Year: " year]
                              [:h4 "Color: " color]
-                             [:h4 "Fuel Type: " (str gas_type " Octane")]
-                             [:h4 "Only Top Tier: " (if only-top-tier?
-                                                      "Yes"
-                                                      "No")]
                              [:h4 "License Plate: " license_plate]
                              (when (datastore/account-manager?)
                                [:h4 "User: "
                                 (:name
                                  (utils/get-by-id @portal-cljs.datastore/users
-                                                  user_id))])]))
+                                                  user_id))])
+                             [:h4 "Fuel Type: " (str gas_type " Octane")]
+                             [:h4 "Only Top Tier: " (if only_top_tier
+                                                      "Yes"
+                                                      "No")]]))
             submit-on-click (fn [e]
                               (.preventDefault e)
                               (if @editing?
