@@ -249,9 +249,7 @@
                            (utils/diff-message
                             edit
                             current
-                            (select-keys
-                             diff-key-str (concat (keys edit)
-                                                  (keys current)))))
+                            diff-key-str))
             diff-msg-gen-vehicle (fn [edit-vehicle current-vehicle]
                                    (diff-msg-gen
                                     (server-vehicle->form-vehicle

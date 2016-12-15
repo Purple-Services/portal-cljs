@@ -98,9 +98,7 @@
                            (utils/diff-message
                             edit
                             current
-                            (select-keys
-                             diff-key-str (concat (keys edit)
-                                                  (keys current)))))
+                            diff-key-str))
             diff-msg-gen-user (fn [edit-user current-user]
                                 (diff-msg-gen
                                  (server-user->form-user
