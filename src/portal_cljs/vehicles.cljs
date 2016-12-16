@@ -95,6 +95,7 @@
     (:value (js->clj val
                      :keywordize-keys
                      true))))
+
 (defn VehicleFormComp
   [{:keys [vehicle errors]}]
   (fn [{:keys [vehicle errors]}]
@@ -209,6 +210,7 @@
                                               user_id))
                       ""))))
 
+
 (defn form-vehicle->server-vehicle
   [vehicle]
   (let [{:keys [make model color year]} vehicle
@@ -224,6 +226,44 @@
            :model (convert-select-val model)
            :color (convert-select-val color)
            :year  (convert-select-val year))))
+
+(defn generate-on-click [url method entity-atom alert-success
+                         retrieving? confirming? editing? errors]
+  (fn [_]
+    (entity-save
+     (form-vehicle->server-vehicle @entity-atom)
+     url
+     method
+     retrieving?
+     (edit-on-success
+      {:entity-type "vehicle"
+       :entity-get-url-fn
+       (fn [id]
+         (if (datastore/account-manager?)
+           (str
+            (datastore/account-manager-context-uri)
+            "/vehicle/" id)
+           (str utils/base-url
+                "user/"
+                (get-user-id)
+                "/vehicle/"
+                id)))
+       :edit-entity entity-atom
+       :alert-success alert-success
+       :aux-fn
+       (fn []
+         (reset! confirming? false)
+         (reset! retrieving? false)
+         (reset! editing? false))})
+     (edit-on-error entity-atom
+                    :aux-fn
+                    (fn []
+                      (reset! confirming? false)
+                      (reset! retrieving? false)
+                      (reset! alert-success ""))
+                    :response-fn
+                    (fn [response]
+                      (reset! errors response))))))
 
 (defn EditVehicleForm
   [vehicle]
@@ -283,44 +323,19 @@
                                            @vehicle))
                                   (reset! alert-success "")
                                   (reset! editing? true))))
-            confirm-on-click (fn [_]
-                               (entity-save
-                                (form-vehicle->server-vehicle @edit-vehicle)
-                                (if (datastore/account-manager?)
-                                  (str (datastore/account-manager-context-uri)
-                                       "/edit-vehicle")
-                                  (str utils/base-url "user/" (get-user-id) "/edit-vehicle"))
-                                "PUT"
-                                retrieving?
-                                (edit-on-success
-                                 {:entity-type "vehicle"
-                                  :entity-get-url-fn
-                                  (fn [id]
-                                    (if (datastore/account-manager?)
-                                      (str
-                                       (datastore/account-manager-context-uri)
-                                       "/vehicle/" id)
-                                      (str utils/base-url
-                                           "user/"
-                                           (get-user-id)
-                                           "/vehicle/"
-                                           id)))
-                                  :edit-entity edit-vehicle
-                                  :alert-success alert-success
-                                  :aux-fn
-                                  (fn []
-                                    (reset! confirming? false)
-                                    (reset! retrieving? false)
-                                    (reset! editing? false))})
-                                (edit-on-error edit-vehicle
-                                               :aux-fn
-                                               (fn []
-                                                 (reset! confirming? false)
-                                                 (reset! retrieving? false)
-                                                 (reset! alert-success ""))
-                                               :response-fn
-                                               (fn [response]
-                                                 (reset! errors response)))))
+            confirm-on-click (generate-on-click
+                              (if (datastore/account-manager?)
+                                (str (datastore/account-manager-context-uri)
+                                     "/edit-vehicle")
+                                (str utils/base-url "user/" (get-user-id)
+                                     "/edit-vehicle"))
+                              "PUT"
+                              edit-vehicle
+                              alert-success
+                              retrieving?
+                              confirming?
+                              editing?
+                              errors)
             dismiss-fn (fn [e]
                          ;; reset any errors
                          (reset! errors nil)
@@ -393,45 +408,19 @@
                                 (do
                                   (reset! alert-success "")
                                   (reset! editing? true))))
-            confirm-on-click (fn [_]
-                               (entity-save
-                                (form-vehicle->server-vehicle
-                                 @new-vehicle)
-                                (if (datastore/account-manager?)
-                                  (str (datastore/account-manager-context-uri)
-                                       "/add-vehicle")
-                                  (str utils/base-url "user/" (get-user-id) "/add-vehicle"))
-                                "POST"
-                                retrieving?
-                                (edit-on-success
-                                 {:entity-type "vehicle"
-                                  :entity-get-url-fn
-                                  (fn [id]
-                                    (if (datastore/account-manager?)
-                                      (str
-                                       (datastore/account-manager-context-uri)
-                                       "/vehicle/" id)
-                                      (str utils/base-url
-                                           "user/"
-                                           (get-user-id)
-                                           "/vehicle/"
-                                           id)))
-                                  :edit-entity new-vehicle
-                                  :alert-success alert-success
-                                  :aux-fn
-                                  (fn []
-                                    (reset! confirming? false)
-                                    (reset! retrieving? false)
-                                    (reset! editing? false))})
-                                (edit-on-error new-vehicle
-                                               :aux-fn
-                                               (fn []
-                                                 (reset! confirming? false)
-                                                 (reset! retrieving? false)
-                                                 (reset! alert-success ""))
-                                               :response-fn
-                                               (fn [response]
-                                                 (reset! errors response)))))
+            confirm-on-click (generate-on-click
+                              (if (datastore/account-manager?)
+                                (str (datastore/account-manager-context-uri)
+                                     "/add-vehicle")
+                                (str utils/base-url "user/" (get-user-id)
+                                     "/add-vehicle"))
+                              "POST"
+                              new-vehicle
+                              alert-success
+                              retrieving?
+                              confirming?
+                              editing?
+                              errors)
             dismiss-fn (fn [e]
                          ;; reset any errors
                          (reset! errors nil)
