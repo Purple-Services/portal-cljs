@@ -17,11 +17,37 @@
             [portal-cljs.xhr :refer [process-json-response retrieve-url]]
             [reagent.core :as r]))
 
+(def default-new-vehicle {:user_id (get-user-id)
+                          :active true
+                          :year ""
+                          :make ""
+                          :model ""
+                          :color ""
+                          :gas_type "87"
+                          :only_top_tier true
+                          :license_plate ""})
+
+(def state (r/atom {:current-vehicle nil
+                    :alert-success ""
+                    :add-vehicle-state {:new-vehicle default-new-vehicle
+                                        :confirming? false
+                                        :retrieving? false
+                                        :editing? false}
+                    :edit-vehicle-state {:edit-vehicle default-new-vehicle
+                                         :confrming? false
+                                         :retrieving? false
+                                         :editing? false}}))
+
 (def AutoComplete
   (r/adapt-react-class js/Select.Creatable))
 
 (def default-form-target
   [:div {:style {:display "none"}}])
+
+(defn reset-editing-atoms!
+  []
+  (reset! (r/cursor state [:add-vehicle-state :editing?]) false)
+  (reset! (r/cursor state [:edit-vehicle-state :editing?]) false))
 
 (def vehicle-years
   (clj->js (mapv #(hash-map :value (str %)
@@ -49,53 +75,12 @@
                             :label %)
                  (available-models year make))))
 
-(def car-colors
-  (clj->js (mapv #(hash-map :value %
-                            :label %)
-                 ["White", "Black", "Silver", "Gray", "Red", "Blue", "Brown",
-                  "Biege", "Cream","Yellow", "Gold", "Green", "Pink", "Purple",
-                  "Copper", "Camo"])))
-
-(def default-new-vehicle {:user_id (get-user-id)
-                          :active true
-                          :year ""
-                          :make ""
-                          :model ""
-                          :color ""
-                          :gas_type "87"
-                          :only_top_tier true
-                          :license_plate ""})
-
-(def state (r/atom {:current-vehicle nil
-                    :alert-success ""
-                    :add-vehicle-state {:new-vehicle default-new-vehicle
-                                        :confirming? false
-                                        :retrieving? false
-                                        :editing? false}
-                    :edit-vehicle-state {:edit-vehicle default-new-vehicle
-                                         :confrming? false
-                                         :retrieving? false
-                                         :editing? false}}))
-
-(defn reset-editing-atoms!
-  []
-  (reset! (r/cursor state [:add-vehicle-state :editing?]) false)
-  (reset! (r/cursor state [:edit-vehicle-state :editing?]) false))
-
-;; this is a hack for now. It should be that
-;; (= vehicle (form-vehicle->server-vehicle
-;; (server-vehicle->form-vehicle vehicle)))
-;; this would also mean changing the user, octane select
-;; options
-;; perhaps some other parts of the form as well
-(defn get-Select-val
-  [val]
-  (if (string? val)
-    val
-    (:value (js->clj val
-                     :keywordize-keys
-                     true))))
-
+(def car-colors (clj->js (mapv #(hash-map :value %
+                                          :label %)
+                               ["White", "Black", "Silver", "Gray", "Red",
+                                "Blue", "Brown", "Biege", "Cream","Yellow",
+                                "Gold", "Green", "Pink", "Purple",
+                                "Copper", "Camo"])))
 (defn VehicleFormComp
   [{:keys [vehicle errors]}]
   (fn [{:keys [vehicle errors]}]
@@ -107,7 +92,12 @@
           color (r/cursor vehicle [:color])
           gas-type (r/cursor vehicle [:gas_type])
           only-top-tier? (r/cursor vehicle [:only_top_tier])
-          license-plate (r/cursor vehicle [:license_plate])]
+          license-plate (r/cursor vehicle [:license_plate])
+          get-select-val (fn [val]
+                           (:value (js->clj val
+                                            :keywordize-keys
+                                            true)))]
+      (.log js/console (clj->js @vehicle))
       [:div
        [:div {:class "row"}
         [:div {:class "col-lg-4 col-sm-12"}
@@ -128,7 +118,7 @@
                                       (reset! make value))
                          :placeholder "Make"
                          :options (vehicle-makes
-                                   (get-Select-val @year))}]]]
+                                   (get-select-val @year))}]]]
         [:div {:class "col-lg-4 col-sm-12"}
          [FormGroup {:label "model"
                      :errors (:model @errors)}
@@ -138,8 +128,8 @@
                          :aria-labelledby "Model"
                          :placeholder "Model"
                          :options (vehicle-models
-                                   (get-Select-val @year)
-                                   (get-Select-val @make))}]]]]
+                                   (get-select-val @year)
+                                   (get-select-val @make))}]]]]
        [:div {:class "row"}
         [:div {:class "col-lg-6 col-sm-12"}
          [FormGroup {:label "color"
@@ -201,14 +191,10 @@
   (let [{:keys [make model year color gas_type only_top_tier
                 license_plate user_id]} vehicle]
     (assoc vehicle
-           :gas_type (str gas_type " Octane")
-           :only_top_tier (if only_top_tier
-                            "Yes"
-                            "No")
-           :user_id (if (datastore/account-manager?)
-                      (:name (utils/get-by-id @portal-cljs.datastore/users
-                                              user_id))
-                      ""))))
+           :year (clj->js {:value year :label year})
+           :make (clj->js {:value make :label make})
+           :model (clj->js {:value model :label model})
+           :color (clj->js {:value color :label color}))))
 
 
 (defn form-vehicle->server-vehicle
@@ -226,6 +212,32 @@
            :model (convert-select-val model)
            :color (convert-select-val color)
            :year  (convert-select-val year))))
+
+(defn server-vehicle->display-vehicle
+  [vehicle]
+  (let [{:keys [year make model color user_id gas_type
+                only_top_tier]} vehicle
+                get-value (fn [js-val] (:value (js->clj js-val
+                                                        :keywordize-keys
+                                                        true)))
+                convert-select-val (fn [val]
+                                     (if (string? val)
+                                       val
+                                       (get-value val)))]
+    (assoc vehicle
+           :year  (convert-select-val year)
+           :make  (convert-select-val make)
+           :model (convert-select-val model)
+           :color (convert-select-val color)
+           :gas_type (str gas_type " Octane")
+           :user_id (:name (utils/get-by-id @portal-cljs.datastore/users
+                                            user_id))
+           :only_top_tier (if only_top_tier
+                            "Yes"
+                            "No"))))
+(defn form-vehicle->display-vehicle
+  [vehicle]
+  (server-vehicle->display-vehicle (form-vehicle->server-vehicle vehicle)))
 
 (defn generate-on-click [url method entity-atom alert-success
                          retrieving? confirming? editing? errors]
@@ -292,8 +304,7 @@
                             diff-key-str))
             diff-msg-gen-vehicle (fn [edit-vehicle current-vehicle]
                                    (diff-msg-gen
-                                    (server-vehicle->form-vehicle
-                                     edit-vehicle)
+                                    edit-vehicle
                                     (server-vehicle->form-vehicle
                                      current-vehicle)))
             confirm-msg (fn []
@@ -301,10 +312,10 @@
                            (map (fn [el]
                                   ^{:key el}
                                   [:h4 el])
-                                (diff-msg-gen-vehicle
-                                 (form-vehicle->server-vehicle
-                                  @edit-vehicle)
-                                 current-vehicle))])
+                                (diff-msg-gen
+                                 (form-vehicle->display-vehicle @edit-vehicle)
+                                 (server-vehicle->display-vehicle
+                                  current-vehicle)))])
             submit-on-click (fn [e]
                               (.preventDefault e)
                               (if @editing?
@@ -464,7 +475,8 @@
     (fn [state]
       (when-not (datastore/is-child-user?)
         (when @new-editing?
-          (reset! new-vehicle default-new-vehicle)
+          (reset! new-vehicle (server-vehicle->form-vehicle
+                               default-new-vehicle))
           (when-not @old-editing?
             (reset! form-target [AddVehicleForm]))
           default-form-target)
@@ -488,9 +500,10 @@
             (fn [_]
               (reset! old-editing? true)
               (reset! edit-vehicle
-                      (utils/get-by-id
-                       @datastore/vehicles
-                       (:id vehicle)))
+                      (server-vehicle->form-vehicle
+                       (utils/get-by-id
+                        @datastore/vehicles
+                        (:id vehicle))))
               (reset! form-target [EditVehicleForm
                                    @edit-vehicle]))
             :class "fake-link"}
