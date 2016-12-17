@@ -352,9 +352,6 @@
                          (reset! errors nil)
                          ;; no longer editing
                          (reset-editing-atoms!)
-                         ;; reset edit-vehicle
-                         (reset! edit-vehicle
-                                 current-vehicle)
                          ;; reset confirming
                          (reset! confirming? false))]
         [:div {:class "form-border"
@@ -437,8 +434,6 @@
                          (reset! errors nil)
                          ;; no longer editing
                          (reset-editing-atoms!)
-                         ;; reset edit-zone
-                         (reset! new-vehicle default-new-vehicle)
                          ;; reset confirming
                          (reset! confirming? false))]
         [:div {:class "form-border"

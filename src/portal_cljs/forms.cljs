@@ -66,9 +66,6 @@
         (put! datastore/modify-data-chan
               {:topic channel-topic
                :data [res]})
-        (reset! edit-entity (assoc  res
-                                    :errors nil
-                                    :retrieving? false))
         (reset! alert-success "Successfully updated!")
         (aux-fn))))))
 
