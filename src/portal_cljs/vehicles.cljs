@@ -97,7 +97,6 @@
                            (:value (js->clj val
                                             :keywordize-keys
                                             true)))]
-      (.log js/console (clj->js @vehicle))
       [:div
        [:div {:class "row"}
         [:div {:class "col-lg-4 col-sm-12"}
