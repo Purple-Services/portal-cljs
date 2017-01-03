@@ -41,7 +41,7 @@ Purple-Services
 1. Develop the interface using figwheel
 2. Test the advanced compilation output with portal-service
 
-## 1. Develop the interface using figwheel
+## Develop the interface using figwheel
 
 You will need two terminals open in order to compile and run the code using this workflow.
 
