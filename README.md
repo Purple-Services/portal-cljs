@@ -1,62 +1,121 @@
 # portal-cljs
 
-FIXME: Write a one-line description of your library/project.
+ClojureScript for the Purple Customer Portal
 
-## Overview
+## Javascript and ClojureScript
 
-FIXME: Write a paragraph about the library/project and highlight its goals.
+ClojureScript uses the Google closure compiler to translate ClojureScript to Javascript. There is a basic and advanced compilation mode. The basic compilation outputs Javascript that is suitable for debugging purposes. The advanced compilation mode produces a single file of minified Javascript with dead code pruned and is suitable for a production release.
 
-## Setup
+There can be discrepancies in the way the code is compiled between the two modes. One common problem is the way javascript object properties are accessed in clojurescript. For example, in javascript the URL property of document is accessed via:
 
-Most of the following scripts require [rlwrap](http://utopia.knoware.nl/~hlub/uck/rlwrap/) (on OS X installable via brew).
-
-Build your project once in dev mode with the following script and then open `index.html` in your browser.
-
-    ./scripts/build
-
-To auto build your project in dev mode:
-
-    ./scripts/watch
-
-To start an auto-building Node REPL:
-
-    ./scripts/repl
-
-To get source map support in the Node REPL:
-
-    lein npm install
-    
-To start a browser REPL:
-    
-1. Uncomment the following lines in src/portal_cljs/core.cljs:
-```clojure
-;; (defonce conn
-;;   (repl/connect "http://localhost:9000/repl"))
+```javascript
+document.URL
 ```
-2. Run `./scripts/brepl`
-3. Browse to `http://localhost:9000` (you should see `Hello world!` in the web console)
-4. (back to step 3) you should now see the REPL prompt: `cljs.user=>`
-5. You may now evaluate ClojureScript statements in the browser context.
-    
-For more info using the browser as a REPL environment, see
-[this](https://github.com/clojure/clojurescript/wiki/The-REPL-and-Evaluation-Environments#browser-as-evaluation-environment).
-    
-Clean project specific out:
 
-    lein clean
-     
-Build a single release artifact with the following script and then open `index_release.html` in your browser.
+In clojurescript, this can be accessed in two ways.
 
-    ./scripts/release
+```clojurescript
+;; first example
+(.-URL document)
+;; second example
+(aget document "URL")
+```
 
-## Problems
+The above two statements are equivalent when using basic compilation. However, in advanced compilation mode the first example will fail due to name mangling. The reason that the second example works and the first one doesn't is that the Google closure compiler in advanced compilation mode (which is used by the clojurescript compiler) will not touch strings.
 
-For some reason, lein figwheel will compile your file.cljs~ instead of your
-file.cljs files. Delete these if there is mysterious behavior that should not
-be occuring. Also, don't forget to Network -> Disable Cache in Chrome.
+Development of the Purple Portal is full-stack development work on the portal-service and portal-cljs repositories. The following outline provides a basic workflow that assumes a directory structure that matches that of the Purple-Services repository.
+
+For example:
+
+```
+Purple-Services
+	|
+	|- portal-service
+	|
+	|- portal-cljs
+```
+
+# Development Workflow
+
+0. Produce a new route or feature in portal-service (optional)
+1. Develop the interface using figwheel
+2. Test the advanced compilation output with portal-service
+
+## 1. Develop the interface using figwheel
+
+You will need two terminals open in order to compile and run the code using this workflow.
+
+*Advanced compilation*
+```bash
+$ lein cljsbuild auto release
+```
+
+The portal-service server should be running when developing. Start it in the portal-service dir:
+
+```bash
+$ lein ring server
+```
+
+The advanced compilation target is
+```
+../portal-service/src/public/js/portal.js
+```
+
+*Figwheel*
+```bash
+$ rlwrap lein figwheel
+```
+
+Note: rlwrap provides a readline wrapper for the figwheel REPL
+
+Connect the browser to the figwheel server by browsing to http://localhost:3449/index.html. After it connects, the figwheel REPL will become active in the terminal. When changes are made to the codebase, Figwheel will automatically update the browser code. If there are errors during compilation, Figwheel will report them.
+
+Figwheel serves index.html from the resources/public dir. The code depends on setting a base-url in the html file that it is served from. For example, index.html has this div:
+
+```html
+<div id="base-url" value="http://localhost:3002/" style="display: none;"></div>
+```
+
+where the attribute 'value' is the base-url. The clojurescript code pulls the value attribute from div#base-url in order to set the base-url used in server calls. The base-url defined in the div above assumes the server is running on the default port of 3002 (defined in portal-services/profiles.clj).
+
+If you would like to open up a separate Chrome dev environment for development, use the follwing command:
+
+```bash
+$  /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --disable-web-security --user-data-dir=/tmp/chrome2/ \ http://localhost:3449/index.html
+```
+
+Alternatively, create a script named 'chrome-file-open':
+
+```bash
+#!/bin/bash
+
+/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --disable-web-security --user-data-dir=/tmp/chrome2/ \ $1
+```
+
+chmod +x this script and put it on your $PATH. You can then open the files with:
+
+```bash
+$ chrome-file-open http://localhost:3449/index.html
+```
+
+### figwheel notes
+
+portal-cljs makes use of the Reagent ClojureScript React wrapper. 
+
+#### on-jsload
+
+When developing a feature for a particular tab on the portal, it is convinient to have figwheel go to that tab on every reload. In dev.cljs (not included in the advanced release compilation), you can change the view that is loaded. For example, to have zones tab selected, use:
+
+```clojure
+(defn ^:export on-jsload
+  []
+  (core/init-app)
+  (utils/select-toggle-key! (r/cursor state/landing-state [:tab-content-toggle])
+                            :vehicles-view))
+  
+```			   
 
 ## License
 
-Copyright © 2016 FIXME
 
-Distributed under the Eclipse Public License either version 1.0 or (at your option) any later version.
+Copyright © 2017 Purple Services Inc
