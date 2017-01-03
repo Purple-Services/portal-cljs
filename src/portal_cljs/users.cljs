@@ -33,6 +33,7 @@
                                       :retrieving? false
                                       :editing? false}
                     :form-target default-form-target}))
+
 (defn reset-editing-atoms!
   []
   (reset! (r/cursor state [:add-user-state :editing?]) false)
@@ -80,6 +81,39 @@
   (let [{:keys [email name phone_number]} user]
     user))
 
+(defn generate-on-click
+  [url method entity-atom alert-success
+   retrieving? confirming? editing? errors]
+  (fn [_]
+    (entity-save
+     (form-user->server-user @entity-atom)
+     url
+     method
+     retrieving?
+     (edit-on-success
+      {:entity-type "user"
+       :entity-get-url-fn
+       (fn [id]
+         (str
+          (datastore/account-manager-context-uri)
+          "/user/" id))
+       :edit-entity entity-atom
+       :alert-success alert-success
+       :aux-fn
+       (fn []
+         (reset! confirming? false)
+         (reset! retrieving? false)
+         (reset! editing? false))})
+     (edit-on-error entity-atom
+                    :aux-fn
+                    (fn []
+                      (reset! confirming? false)
+                      (reset! retrieving? false)
+                      (reset! alert-success ""))
+                    :response-fn
+                    (fn [response]
+                      (reset! errors response))))))
+
 (defn EditUserForm
   [user]
   (let [edit-user-state (r/cursor state [:edit-user-state])
@@ -101,18 +135,15 @@
                             diff-key-str))
             diff-msg-gen-user (fn [edit-user current-user]
                                 (diff-msg-gen
-                                 (server-user->form-user
-                                  edit-user)
-                                 (server-user->form-user
-                                  current-user)))
+                                 edit-user
+                                 current-user))
             confirm-msg (fn []
                           [:div "The following changes will be made "
                            (map (fn [el]
                                   ^{:key el}
                                   [:h4 el])
                                 (diff-msg-gen-user
-                                 (form-user->server-user
-                                  @edit-user)
+                                 @edit-user
                                  current-user))])
             submit-on-click (fn [e]
                               (.preventDefault e)
@@ -132,44 +163,21 @@
                                            @user))
                                   (reset! alert-success "")
                                   (reset! editing? true))))
-            confirm-on-click (fn [_]
-                               (entity-save
-                                (form-user->server-user @edit-user)
-                                (str (datastore/account-manager-context-uri)
-                                     "/edit-user")
-                                "PUT"
-                                retrieving?
-                                (edit-on-success
-                                 {:entity-type "user"
-                                  :entity-get-url-fn
-                                  (fn [id]
-                                    (str
-                                     (datastore/account-manager-context-uri)
-                                     "/user/" id))
-                                  :edit-entity edit-user
-                                  :alert-success alert-success
-                                  :aux-fn
-                                  (fn []
-                                    (reset! confirming? false)
-                                    (reset! retrieving? false)
-                                    (reset! editing? false))})
-                                (edit-on-error edit-user
-                                               :aux-fn
-                                               (fn []
-                                                 (reset! confirming? false)
-                                                 (reset! retrieving? false)
-                                                 (reset! alert-success ""))
-                                               :response-fn
-                                               (fn [response]
-                                                 (reset! errors response)))))
+            confirm-on-click (generate-on-click
+                              (str (datastore/account-manager-context-uri)
+                                   "/edit-user")
+                              "PUT"
+                              edit-user
+                              alert-success
+                              retrieving?
+                              confirming?
+                              editing?
+                              errors)
             dismiss-fn (fn [e]
                          ;; reset any errors
                          (reset! errors nil)
                          ;; no longer editing
                          (reset-editing-atoms!)
-                         ;; reset edit-user
-                         (reset! edit-user
-                                 current-user)
                          ;; reset confirming
                          (reset! confirming? false))]
         [:div {:class "form-border"
@@ -224,42 +232,21 @@
                                 (do
                                   (reset! alert-success "")
                                   (reset! editing? true))))
-            confirm-on-click (fn [_]
-                               (entity-save
-                                @new-user
-                                (str (datastore/account-manager-context-uri)
-                                     "/add-user")
-                                "POST"
-                                retrieving?
-                                (edit-on-success
-                                 {:entity-type "user"
-                                  :entity-get-url-fn
-                                  (fn [id]
-                                    (str (datastore/account-manager-context-uri)
-                                         "/user/" id))
-                                  :edit-entity new-user
-                                  :alert-success alert-success
-                                  :aux-fn
-                                  (fn []
-                                    (reset! confirming? false)
-                                    (reset! retrieving? false)
-                                    (reset! editing? false))})
-                                (edit-on-error new-user
-                                               :aux-fn
-                                               (fn []
-                                                 (reset! confirming? false)
-                                                 (reset! retrieving? false)
-                                                 (reset! alert-success ""))
-                                               :response-fn
-                                               (fn [response]
-                                                 (reset! errors response)))))
+            confirm-on-click (generate-on-click
+                              (str (datastore/account-manager-context-uri)
+                                   "/add-user")
+                              "POST"
+                              new-user
+                              alert-success
+                              retrieving?
+                              confirming?
+                              editing?
+                              errors)
             dismiss-fn (fn [e]
                          ;; reset any errors
                          (reset! errors nil)
                          ;; no longer editing
                          (reset-editing-atoms!)
-                         ;; reset edit-zone
-                         (reset! new-user default-new-user)
                          ;; reset confirming
                          (reset! confirming? false))]
         [:div {:class "form-border"

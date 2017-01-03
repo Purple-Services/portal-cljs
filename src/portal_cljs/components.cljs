@@ -141,6 +141,7 @@
                                   :on-click on-click
                                   :cells cell-fns}) item))
                     data))]])))
+;; end table components
 
 (defn RefreshButton
   "props is:
